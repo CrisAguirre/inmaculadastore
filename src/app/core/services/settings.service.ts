@@ -4,14 +4,14 @@ import { tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
 import { Settings } from '../models/interfaces';
 
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   private settingsSubject = new BehaviorSubject<Settings | null>(null);
   public settings$ = this.settingsSubject.asObservable();
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService) { }
 
   loadSettings(): void {
     this.api.getSettings().subscribe({
