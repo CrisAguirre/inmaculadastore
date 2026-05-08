@@ -67,19 +67,27 @@ export class SidebarComponent {
 
   constructor(private auth: AuthService) {
     const role = this.auth.currentUser?.role;
-    this.menuItems = [
-      { icon: '📊', label: 'Dashboard', route: '/dashboard' },
-      { icon: '📦', label: 'Inventario', route: '/inventory' },
-      { icon: '🛒', label: 'Punto de Venta', route: '/pos' },
-      { icon: '💰', label: 'Caja', route: '/cash' },
-    ];
-    if (role === 'admin') {
-      this.menuItems.push(
-        { icon: '📈', label: 'Reportes', route: '/reports' },
-        { icon: '🔔', label: 'Alertas', route: '/alerts' },
-        { icon: '🌐', label: 'Tienda Virtual', route: '/storefront' },
-        { icon: '⚙️', label: 'Configuración', route: '/settings' }
-      );
+
+    if (role === 'cliente') {
+      this.menuItems = [
+        { icon: '📊', label: 'Mis Compras', route: '/dashboard' },
+        { icon: '🌐', label: 'Tienda Virtual', route: '/storefront' }
+      ];
+    } else {
+      this.menuItems = [
+        { icon: '📊', label: 'Dashboard', route: '/dashboard' },
+        { icon: '📦', label: 'Inventario', route: '/inventory' },
+        { icon: '🛒', label: 'Punto de Venta', route: '/pos' },
+        { icon: '💰', label: 'Caja', route: '/cash' },
+      ];
+      if (role === 'admin') {
+        this.menuItems.push(
+          { icon: '📈', label: 'Reportes', route: '/reports' },
+          { icon: '🔔', label: 'Alertas', route: '/alerts' },
+          { icon: '🌐', label: 'Tienda Virtual', route: '/storefront' },
+          { icon: '⚙️', label: 'Configuración', route: '/settings' }
+        );
+      }
     }
   }
 }
