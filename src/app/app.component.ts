@@ -30,7 +30,7 @@ import { SettingsService } from './core/services/settings.service';
     .app-content { flex: 1; padding: 1.5rem; overflow-x: hidden; animation: fadeIn 0.3s ease; }
     
     .floating-wa {
-      position: fixed; bottom: 30px; left: 30px; z-index: 1000;
+      position: fixed; bottom: 30px; right: 30px; z-index: 1000;
       background: #25D366; width: 60px; height: 60px;
       border-radius: 50%; display: flex; justify-content: center; align-items: center;
       box-shadow: 0 4px 15px rgba(37,211,102,0.4); transition: transform 0.3s ease;

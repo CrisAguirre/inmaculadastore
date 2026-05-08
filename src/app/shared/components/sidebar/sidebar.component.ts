@@ -5,7 +5,7 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-sidebar',
   template: `
     <aside class="sidebar" [class.collapsed]="collapsed">
-      <button class="toggle-btn" (click)="collapsed = !collapsed">
+      <button class="toggle-btn desktop-only" (click)="collapsed = !collapsed">
         {{ collapsed ? '☰' : '✕' }}
       </button>
       <nav class="sidebar-nav">
@@ -51,13 +51,16 @@ import { AuthService } from '../../../core/services/auth.service';
       font-weight: 600;
       border-left: 3px solid var(--neon-cyan);
     }
-    .nav-icon { font-size: 1.15rem; min-width: 24px; text-align: center; }
+    .nav-icon { font-size: 1.2rem; min-width: 24px; text-align: center; }
     .nav-label { transition: opacity 0.2s; }
-    .collapsed .nav-label { opacity: 0; width: 0; }
+    .collapsed .nav-label { opacity: 0; width: 0; overflow: hidden; }
     .collapsed .nav-item { justify-content: center; padding: 0.65rem; }
     @media (max-width: 768px) {
-      .sidebar { width: 60px; }
+      .sidebar { width: 56px; flex-shrink: 0; }
+      .desktop-only { display: none; }
       .nav-label { display: none; }
+      .nav-item { justify-content: center; padding: 0.75rem 0; margin: 0 0.25rem; }
+      .nav-item.active { border-left: none; border-bottom: 3px solid var(--neon-cyan); }
     }
   `]
 })
