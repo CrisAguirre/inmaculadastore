@@ -37,12 +37,12 @@ import { SettingsService } from './core/services/settings.service';
     }
     .floating-wa:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(37,211,102,0.6); }
     @media (max-width: 768px) {
-      .app-content { padding: 1rem; width: calc(100vw - 56px); }
+      .app-content { padding: 1rem; width: 100%; min-width: 0; }
       .floating-wa { bottom: 20px; right: 20px; width: 50px; height: 50px; }
       .floating-wa svg { width: 28px; height: 28px; }
     }
     @media (max-width: 480px) {
-      .app-content { padding: 0.75rem; }
+      .app-content { padding: 0.5rem; width: 100%; min-width: 0; }
     }
   `]
 })

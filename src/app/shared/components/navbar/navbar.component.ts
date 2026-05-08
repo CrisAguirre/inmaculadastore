@@ -95,6 +95,14 @@ import { environment } from '../../../../environments/environment';
     @media (max-width: 600px) {
       .user-name, .user-role { display: none; }
     }
+    @media (max-width: 480px) {
+      .navbar { padding: 0 0.5rem; }
+      .navbar-title { font-size: 0.95rem; }
+      .navbar-actions { gap: 0.5rem; }
+      .user-avatar { width: 30px; height: 30px; }
+      .btn-notification, .btn-theme { width: 32px; height: 32px; font-size: 1rem; }
+      .navbar-brand { gap: 0.5rem; }
+    }
   `]
 })
 export class NavbarComponent implements OnInit {

@@ -323,6 +323,7 @@ input, select, textarea { font-family: inherit; }
   overflow-x: auto;
   border-radius: var(--radius-md);
   border: 1px solid rgba(0,229,255,0.1);
+  -webkit-overflow-scrolling: touch;
 }
 
 .data-table {

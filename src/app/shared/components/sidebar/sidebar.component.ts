@@ -56,11 +56,12 @@ import { AuthService } from '../../../core/services/auth.service';
     .collapsed .nav-label { opacity: 0; width: 0; overflow: hidden; }
     .collapsed .nav-item { justify-content: center; padding: 0.65rem; }
     @media (max-width: 768px) {
-      .sidebar { width: 56px; flex-shrink: 0; }
+      .sidebar { width: 64px; flex-shrink: 0; }
       .desktop-only { display: none; }
       .nav-label { display: none; }
-      .nav-item { justify-content: center; padding: 0.75rem 0; margin: 0 0.25rem; }
-      .nav-item.active { border-left: none; border-bottom: 3px solid var(--neon-cyan); }
+      .nav-item { justify-content: center; padding: 0.85rem 0; margin: 0.15rem 0.25rem; }
+      .nav-icon { font-size: 1.4rem; }
+      .nav-item.active { border-left: none; border-bottom: 3px solid var(--neon-cyan); border-radius: 6px; }
     }
   `]
 })
