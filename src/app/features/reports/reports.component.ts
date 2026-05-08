@@ -3,63 +3,75 @@ import { ApiService } from '@core/services/api.service';
 
 @Component({
   selector: 'app-reports',
-  template: `
-    <div class="page-header">
-      <h1>📈 Reportes</h1>
-      <div style="display:flex;gap:0.5rem">
-        <button *ngFor="let p of ['day','week','month']" [class]="period===p ? 'btn-primary btn-sm' : 'btn-outline btn-sm'"
-                (click)="period=p;loadData()">{{ p === 'day' ? 'Hoy' : p === 'week' ? 'Semana' : 'Mes' }}</button>
-      </div>
-    </div>
-
-    <div class="grid-3 mb-3">
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(0,229,255,0.1)">💰</div>
-        <div><div class="stat-value">\${{ summary.totalRevenue | number:'1.0-0' }}</div><div class="stat-label">Ingresos</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(124,77,255,0.1)">🧾</div>
-        <div><div class="stat-value">{{ summary.totalTransactions }}</div><div class="stat-label">Ventas</div></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(0,230,118,0.1)">🎯</div>
-        <div><div class="stat-value">\${{ summary.averageTicket | number:'1.0-0' }}</div><div class="stat-label">Ticket Promedio</div></div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="neon-card">
-        <h3 style="margin-bottom:1rem">⭐ Top 10 Productos</h3>
-        <div *ngFor="let p of topProducts; let i = index" style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--bg-input)">
-          <span style="font-weight:700;color:var(--neon-cyan);min-width:20px">{{ i+1 }}</span>
-          <span style="flex:1;font-size:0.85rem">{{ p.name }}</span>
-          <span class="badge badge-cyan">{{ p.totalQuantity }} uds</span>
-          <span style="font-family:Outfit;font-weight:700">\${{ p.totalRevenue | number:'1.0-0' }}</span>
-        </div>
-      </div>
-      <div class="neon-card-violet">
-        <h3 style="margin-bottom:1rem">🐌 Productos Estancados (30 días)</h3>
-        <div *ngFor="let p of lowRotation" style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--bg-input)">
-          <span style="flex:1;font-size:0.85rem">{{ p.name }}</span>
-          <span class="badge badge-orange">Stock: {{ p.stock }}</span>
-        </div>
-        <p *ngIf="lowRotation.length === 0" style="color:var(--text-muted);text-align:center;padding:1rem">Sin productos estancados</p>
-      </div>
-    </div>
-  `
+  templateUrl: './reports.component.html',
+  styleUrls: ['./reports.component.scss']
 })
 export class ReportsComponent implements OnInit {
-  period = 'week';
-  summary: any = { totalRevenue: 0, totalTransactions: 0, averageTicket: 0 };
+  period = 'month';
+  activeTab = 'ventas';
+  summary: any = { totalRevenue: 0, totalTransactions: 0, averageTicket: 0, totalItems: 0, salesByDay: [] };
   topProducts: any[] = [];
   lowRotation: any[] = [];
+  salesByCategory: any[] = [];
+  salesByPayment: any[] = [];
+  salesByHour: any[] = [];
+  inventory: any = { totalProducts: 0, totalUnits: 0, totalCostValue: 0, totalSaleValue: 0, potentialProfit: 0, marginPercent: 0, lowStockCount: 0, outOfStockCount: 0, byCategory: [] };
+  profitMargins: any[] = [];
+
+  pieColors = ['#00E5FF', '#7C4DFF', '#00E676', '#FF9100', '#F50057', '#FFEA00', '#00B0FF', '#D500F9', '#76FF03', '#FF3D00'];
 
   constructor(private api: ApiService) {}
-  ngOnInit(): void { this.loadData(); }
+  ngOnInit(): void { this.loadAll(); }
 
-  loadData(): void {
+  setPeriod(p: string) { this.period = p; this.loadAll(); }
+
+  loadAll(): void {
     this.api.getSalesSummary(this.period).subscribe({ next: (r: any) => this.summary = r });
     this.api.getTopProducts(10).subscribe({ next: (r: any) => this.topProducts = r || [] });
     this.api.getLowRotation().subscribe({ next: (r: any) => this.lowRotation = r || [] });
+    this.api.getSalesByCategory(this.period).subscribe({ next: (r: any) => this.salesByCategory = r || [] });
+    this.api.getSalesByPayment(this.period).subscribe({ next: (r: any) => this.salesByPayment = r || [] });
+    this.api.getSalesByHour(this.period).subscribe({ next: (r: any) => this.salesByHour = r || [] });
+    this.api.getInventoryValuation().subscribe({ next: (r: any) => this.inventory = r });
+    this.api.getProfitMargins().subscribe({ next: (r: any) => this.profitMargins = (r || []).slice(0, 15) });
   }
+
+  // ── Pie chart helpers ──
+  get categoryTotal(): number { return this.salesByCategory.reduce((s: number, c: any) => s + c.revenue, 0) || 1; }
+  get paymentTotal(): number { return this.salesByPayment.reduce((s: number, c: any) => s + c.totalRevenue, 0) || 1; }
+
+  piePath(items: any[], valueKey: string, total: number, index: number): string {
+    let startAngle = 0;
+    for (let i = 0; i < index; i++) {
+      startAngle += (items[i][valueKey] / total) * 360;
+    }
+    const angle = (items[index][valueKey] / total) * 360;
+    return this.describeArc(100, 100, 80, startAngle, startAngle + angle);
+  }
+
+  describeArc(x: number, y: number, r: number, startAngle: number, endAngle: number): string {
+    if (endAngle - startAngle >= 359.99) {
+      return `M ${x-r},${y} a ${r},${r} 0 1,1 ${r*2},0 a ${r},${r} 0 1,1 -${r*2},0`;
+    }
+    const s = this.polarToCart(x, y, r, startAngle);
+    const e = this.polarToCart(x, y, r, endAngle);
+    const large = endAngle - startAngle > 180 ? 1 : 0;
+    return `M ${x},${y} L ${s.x},${s.y} A ${r},${r} 0 ${large},1 ${e.x},${e.y} Z`;
+  }
+
+  polarToCart(cx: number, cy: number, r: number, deg: number) {
+    const rad = (deg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+
+  // ── Bar chart helpers ──
+  get maxHourly(): number { return Math.max(...this.salesByHour.map((h: any) => h.count), 1); }
+  get maxDailyRevenue(): number { return Math.max(...(this.summary.salesByDay || []).map((d: any) => d.total), 1); }
+
+  paymentLabel(method: string): string {
+    const map: any = { efectivo: '💵 Efectivo', transferencia: '📲 Transferencia', mixto: '🔄 Mixto' };
+    return map[method] || method;
+  }
+
+  formatCurrency(n: number): string { return '$' + (n || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 }); }
 }

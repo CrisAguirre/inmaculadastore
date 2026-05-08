@@ -94,6 +94,24 @@ export class ApiService {
   getLowRotation(): Observable<any> {
     return this.http.get(`${this.baseUrl}/reports/low-rotation`);
   }
+  getSalesByCategory(period?: string): Observable<any> {
+    const params: any = period ? { period } : undefined;
+    return this.http.get(`${this.baseUrl}/reports/sales-by-category`, { params });
+  }
+  getSalesByPayment(period?: string): Observable<any> {
+    const params: any = period ? { period } : undefined;
+    return this.http.get(`${this.baseUrl}/reports/sales-by-payment`, { params });
+  }
+  getSalesByHour(period?: string): Observable<any> {
+    const params: any = period ? { period } : undefined;
+    return this.http.get(`${this.baseUrl}/reports/sales-by-hour`, { params });
+  }
+  getInventoryValuation(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/reports/inventory-valuation`);
+  }
+  getProfitMargins(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/reports/profit-margins`);
+  }
 
   // ── Storefront (Public) ──
   getStorefrontProducts(params?: any): Observable<any> {
