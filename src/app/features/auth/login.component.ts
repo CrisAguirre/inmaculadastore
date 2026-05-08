@@ -34,6 +34,9 @@ import { SettingsService } from '@core/services/settings.service';
             {{ loading ? '⏳ Ingresando...' : '🔐 Ingresar' }}
           </button>
           <p class="toggle-view">¿No tienes cuenta? <a href="javascript:void(0)" (click)="toggleView()">Regístrate aquí</a></p>
+          <button type="button" class="btn-outline btn-lg login-btn" (click)="onGuestLogin()" [disabled]="loading" style="margin-top: 1rem;">
+            👤 Entrar como Invitado
+          </button>
         </form>
 
         <form *ngIf="!isLoginView" (ngSubmit)="onRegister()" class="login-form">
@@ -166,6 +169,21 @@ export class LoginComponent implements OnInit {
       error: (err) => {
         this.loading = false;
         this.error = err.error?.message || 'Error al registrar';
+      }
+    });
+  }
+
+  onGuestLogin(): void {
+    this.loading = true;
+    this.error = '';
+    this.auth.loginGuest().subscribe({
+      next: () => {
+        this.loading = false;
+        this.router.navigate(['/storefront']);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err.error?.message || 'Error al entrar como invitado';
       }
     });
   }

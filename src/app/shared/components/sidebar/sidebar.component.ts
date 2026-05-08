@@ -71,6 +71,12 @@ export class SidebarComponent {
     if (role === 'cliente') {
       this.menuItems = [
         { icon: '📊', label: 'Mis Compras', route: '/dashboard' },
+        { icon: '🌐', label: 'Tienda Virtual', route: '/storefront' },
+        { icon: '⚙️', label: 'Mi Perfil', route: '/settings' }
+      ];
+    } else if (role === 'invitado') {
+      this.menuItems = [
+        { icon: '📊', label: 'Mis Compras', route: '/dashboard' },
         { icon: '🌐', label: 'Tienda Virtual', route: '/storefront' }
       ];
     } else {

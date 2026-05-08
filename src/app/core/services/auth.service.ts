@@ -56,6 +56,27 @@ export class AuthService {
     );
   }
 
+  loginGuest(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login-guest`, {}).pipe(
+      tap(res => {
+        localStorage.setItem('accessToken', res.accessToken);
+        localStorage.setItem('refreshToken', res.refreshToken);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        this.currentUserSubject.next(res.user);
+      })
+    );
+  }
+
+  updateProfile(data: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/update-profile`, data).pipe(
+      tap((res: any) => {
+        const updatedUser = { ...this.currentUser, ...res.user };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        this.currentUserSubject.next(updatedUser);
+      })
+    );
+  }
+
   refreshToken(): Observable<{ accessToken: string; refreshToken: string }> {
     const refreshToken = localStorage.getItem('refreshToken');
     return this.http.post<{ accessToken: string; refreshToken: string }>(
