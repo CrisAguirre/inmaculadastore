@@ -36,6 +36,14 @@ import { SettingsService } from './core/services/settings.service';
       box-shadow: 0 4px 15px rgba(37,211,102,0.4); transition: transform 0.3s ease;
     }
     .floating-wa:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(37,211,102,0.6); }
+    @media (max-width: 768px) {
+      .app-content { padding: 1rem; width: calc(100vw - 56px); }
+      .floating-wa { bottom: 20px; right: 20px; width: 50px; height: 50px; }
+      .floating-wa svg { width: 28px; height: 28px; }
+    }
+    @media (max-width: 480px) {
+      .app-content { padding: 0.75rem; }
+    }
   `]
 })
 export class AppComponent implements OnInit {
