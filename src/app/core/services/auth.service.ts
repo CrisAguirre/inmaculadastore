@@ -45,6 +45,17 @@ export class AuthService {
     );
   }
 
+  registerClient(data: any): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register-client`, data).pipe(
+      tap(res => {
+        localStorage.setItem('accessToken', res.accessToken);
+        localStorage.setItem('refreshToken', res.refreshToken);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        this.currentUserSubject.next(res.user);
+      })
+    );
+  }
+
   refreshToken(): Observable<{ accessToken: string; refreshToken: string }> {
     const refreshToken = localStorage.getItem('refreshToken');
     return this.http.post<{ accessToken: string; refreshToken: string }>(
