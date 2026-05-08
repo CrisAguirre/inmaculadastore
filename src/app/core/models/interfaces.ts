@@ -2,9 +2,11 @@ export interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'admin' | 'cajero' | 'cliente';
+  role: 'admin' | 'cajero' | 'cliente' | 'invitado';
   isActive: boolean;
   createdAt: string;
+  phone?: string;
+  address?: string;
 }
 
 export interface AuthResponse {
