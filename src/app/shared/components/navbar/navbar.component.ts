@@ -15,6 +15,9 @@ import { environment } from '../../../../environments/environment';
       </div>
 
       <div class="navbar-actions">
+        <button class="btn-theme" (click)="toggleTheme()" [title]="isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'">
+          {{ isDarkMode ? '☀️' : '🌙' }}
+        </button>
         <button class="btn-notification" (click)="toggleAlerts()" *ngIf="authService.hasRole('admin')">
           🔔
           <span class="notification-badge" *ngIf="unreadAlerts > 0">{{ unreadAlerts }}</span>
@@ -35,9 +38,10 @@ import { environment } from '../../../../environments/environment';
     .navbar {
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 1.5rem; height: 60px;
-      background: #fff; border-bottom: 1px solid rgba(0,229,255,0.12);
+      background: var(--bg-card); border-bottom: 1px solid rgba(0,229,255,0.12);
       box-shadow: 0 1px 8px rgba(0,0,0,0.03);
       position: sticky; top: 0; z-index: 100;
+      color: var(--text-primary);
     }
     .navbar-brand {
       display: flex; align-items: center; gap: 0.75rem; cursor: pointer;
@@ -49,12 +53,12 @@ import { environment } from '../../../../environments/environment';
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
     .navbar-actions { display: flex; align-items: center; gap: 1rem; }
-    .btn-notification {
+    .btn-notification, .btn-theme {
       position: relative; background: var(--bg-input); border: none;
       width: 38px; height: 38px; border-radius: 8px; font-size: 1.1rem;
-      cursor: pointer; transition: all 0.2s;
+      cursor: pointer; transition: all 0.2s; color: var(--text-primary);
     }
-    .btn-notification:hover { background: rgba(0,229,255,0.08); }
+    .btn-notification:hover, .btn-theme:hover { background: rgba(0,229,255,0.08); }
     .notification-badge {
       position: absolute; top: -4px; right: -4px;
       background: var(--neon-red); color: #fff; font-size: 0.65rem;
@@ -78,13 +82,13 @@ import { environment } from '../../../../environments/environment';
     .user-role { font-size: 0.65rem; }
     .dropdown {
       position: absolute; top: 56px; right: 1.5rem;
-      background: #fff; border: 1px solid rgba(0,229,255,0.15);
+      background: var(--bg-card); border: 1px solid rgba(0,229,255,0.15);
       border-radius: 10px; box-shadow: 0 8px 30px rgba(0,0,0,0.1);
       overflow: hidden; z-index: 200; min-width: 180px;
     }
     .dropdown button {
       display: block; width: 100%; padding: 0.7rem 1rem;
-      text-align: left; border: none; background: none;
+      text-align: left; border: none; background: none; color: var(--text-primary);
       font-size: 0.85rem; cursor: pointer; transition: background 0.15s;
     }
     .dropdown button:hover { background: var(--bg-input); }
@@ -96,6 +100,7 @@ import { environment } from '../../../../environments/environment';
 export class NavbarComponent implements OnInit {
   showMenu = false;
   unreadAlerts = 0;
+  isDarkMode = false;
 
   get userInitial(): string {
     return this.authService.currentUser?.name?.charAt(0)?.toUpperCase() || '?';
@@ -119,6 +124,26 @@ export class NavbarComponent implements OnInit {
     this.settingsService.loadSettings();
     if (this.authService.hasRole('admin')) {
       this.loadAlertCount();
+    }
+    this.initTheme();
+  }
+
+  initTheme(): void {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      this.isDarkMode = true;
+      document.documentElement.classList.add('dark');
+    }
+  }
+
+  toggleTheme(): void {
+    this.isDarkMode = !this.isDarkMode;
+    if (this.isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   }
 

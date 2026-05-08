@@ -43,6 +43,25 @@
 }
 
 /* ══════════════════════════════════════════════════
+   🌙 DARK THEME TOKENS
+   ══════════════════════════════════════════════════ */
+html.dark {
+  /* Fondos oscuros */
+  --bg-primary: #0F111A;
+  --bg-card: #151822;
+  --bg-sidebar: #12141D;
+  --bg-input: #1C202E;
+
+  /* Texto oscuro */
+  --text-primary: #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-muted: #6B7280;
+
+  /* Sombras y bordes en dark mode */
+  --shadow-card: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+/* ══════════════════════════════════════════════════
    🌐 GLOBAL RESET & BASE
    ══════════════════════════════════════════════════ */
 *, *::before, *::after {
