@@ -49,4 +49,13 @@ export class SettingsService {
     }
     return environment.apiUrl.replace('/api', '') + url;
   }
+
+  get whatsappNumber(): string {
+    return this.settings?.whatsappNumber || '';
+  }
+
+  get whatsappLink(): string {
+    const num = this.whatsappNumber;
+    return num ? `https://wa.me/${num}` : '';
+  }
 }
