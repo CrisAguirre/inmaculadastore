@@ -17,18 +17,16 @@ export class SettingsService {
     this.api.getSettings().subscribe({
       next: (settings: Settings) => {
         this.settingsSubject.next(settings);
-        this.updateFavicon(settings.logoUrl);
+        this.updateFavicon();
       },
       error: () => console.warn('No se pudieron cargar las configuraciones')
     });
   }
 
-  private updateFavicon(logoUrl?: string): void {
-    if (!logoUrl) return;
-    const fullUrl = logoUrl.startsWith('http') ? logoUrl : environment.apiUrl.replace('/api', '') + logoUrl;
+  private updateFavicon(): void {
     const favicon = document.getElementById('app-favicon') as HTMLLinkElement;
     if (favicon) {
-      favicon.href = fullUrl;
+      favicon.href = this.logoFullUrl;
     }
   }
 
@@ -41,6 +39,14 @@ export class SettingsService {
   }
 
   get logoUrl(): string {
-    return this.settings?.logoUrl || '';
+    return this.settings?.logoUrl || '/assets/logo.png';
+  }
+
+  get logoFullUrl(): string {
+    const url = this.logoUrl;
+    if (url.startsWith('http') || url.startsWith('/assets/')) {
+      return url;
+    }
+    return environment.apiUrl.replace('/api', '') + url;
   }
 }

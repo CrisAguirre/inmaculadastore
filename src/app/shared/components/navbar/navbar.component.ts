@@ -10,7 +10,7 @@ import { environment } from '../../../../environments/environment';
   template: `
     <nav class="navbar">
       <div class="navbar-brand" routerLink="/dashboard">
-        <img *ngIf="logoFullUrl" [src]="logoFullUrl" alt="Logo" class="navbar-logo">
+        <img *ngIf="settingsService.logoFullUrl" [src]="settingsService.logoFullUrl" alt="Logo" class="navbar-logo">
         <span class="navbar-title">{{ settingsService.storeName }}</span>
       </div>
 
@@ -104,13 +104,6 @@ export class NavbarComponent implements OnInit {
 
   get userInitial(): string {
     return this.authService.currentUser?.name?.charAt(0)?.toUpperCase() || '?';
-  }
-
-  get logoFullUrl(): string {
-    const url = this.settingsService.logoUrl;
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    return environment.apiUrl.replace('/api', '') + url;
   }
 
   constructor(
