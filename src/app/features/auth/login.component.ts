@@ -90,7 +90,7 @@ import { SettingsService } from '@core/services/settings.service';
       text-align: center; margin-bottom: 2rem;
     }
     .login-logo { font-size: 3rem; margin-bottom: 0.5rem; }
-    .login-logo-img { max-height: 60px; margin-bottom: 1rem; border-radius: 8px; }
+    .login-logo-img { display: block; max-height: 60px; margin: 0 auto 1rem; border-radius: 8px; }
     .login-header h1 {
       font-family: 'Outfit', sans-serif; font-size: 1.5rem;
       background: linear-gradient(135deg, var(--neon-cyan), var(--neon-violet));
