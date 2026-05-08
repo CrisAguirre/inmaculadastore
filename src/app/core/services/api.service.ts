@@ -28,6 +28,9 @@ export class ApiService {
   updateStock(id: string, data: { quantity: number; type: 'entrada' | 'salida' }): Observable<any> {
     return this.http.patch(`${this.baseUrl}/products/${id}/stock`, data);
   }
+  getNextBarcode(categoryId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/products/next-barcode`, { params: { categoryId } });
+  }
 
   // ── Categories ──
   getCategories(): Observable<any> {
