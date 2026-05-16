@@ -169,11 +169,20 @@ export class SuppliersComponent implements OnInit {
     const obs = this.editing
       ? this.api.updateSupplier(this.editingId, this.form)
       : this.api.createSupplier(this.form);
-    obs.subscribe({ next: () => { this.saving = false; this.closeForm(); this.load(); }, error: () => this.saving = false });
+    obs.subscribe({ 
+      next: () => { this.saving = false; this.closeForm(); this.load(); }, 
+      error: (err) => { 
+        this.saving = false; 
+        alert('Error al guardar: ' + (err.error?.message || err.message)); 
+      } 
+    });
   }
 
   remove(id: string) {
     if (!confirm('¿Desactivar este proveedor?')) return;
-    this.api.deleteSupplier(id).subscribe(() => this.load());
+    this.api.deleteSupplier(id).subscribe({
+      next: () => this.load(),
+      error: (err) => alert('Error al eliminar: ' + (err.error?.message || err.message))
+    });
   }
 }
