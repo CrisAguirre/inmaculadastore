@@ -90,8 +90,8 @@ export class ApiService {
     );
   }
 
-  getNextBarcode(categoryId: string): Observable<any> {
-    return this.http.get(`${this.baseUrl}/products/next-barcode`, { params: { categoryId } });
+  getNextBarcode(categoryId: string, supplierId: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/products/next-barcode`, { params: { categoryId, supplierId } });
   }
 
   // ── Categories ────────────────────────────────────────────────────────────

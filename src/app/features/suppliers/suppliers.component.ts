@@ -71,6 +71,13 @@ import { Supplier } from '../../core/models/interfaces';
               <label>NIT / RUT / Cédula</label>
               <input class="form-input" [(ngModel)]="form.nit" placeholder="900.123.456-1" />
             </div>
+            <div class="form-group full-width">
+              <label>Categorías manejadas *</label>
+              <select class="form-input" multiple [(ngModel)]="form.categories" style="height: 100px;">
+                <option *ngFor="let cat of categories" [value]="cat._id">{{ cat.icon }} {{ cat.name }}</option>
+              </select>
+              <small style="color:#888; font-size:0.8rem">Mantén presionado Ctrl (o Cmd) para seleccionar múltiples</small>
+            </div>
             <div class="form-group">
               <label>Persona de contacto</label>
               <input class="form-input" [(ngModel)]="form.contactName" />
@@ -112,15 +119,19 @@ import { Supplier } from '../../core/models/interfaces';
 })
 export class SuppliersComponent implements OnInit {
   suppliers: Supplier[] = [];
+  categories: any[] = [];
   loading = false; saving = false; showForm = false; editing = false;
   search = ''; showInactive = false;
 
-  form: Partial<Supplier> = {};
+  form: any = {};
   private editingId = '';
 
   constructor(private api: ApiService) {}
 
-  ngOnInit() { this.load(); }
+  ngOnInit() { 
+    this.load(); 
+    this.api.getCategories().subscribe({ next: (cats: any) => this.categories = cats });
+  }
 
   load() {
     this.loading = true;
@@ -142,7 +153,10 @@ export class SuppliersComponent implements OnInit {
   closeForm() { this.showForm = false; }
 
   save() {
-    if (!this.form.name) return;
+    if (!this.form.name || !this.form.categories || this.form.categories.length === 0) {
+      alert('El Nombre y al menos una Categoría son obligatorios');
+      return;
+    }
     this.saving = true;
     const obs = this.editing
       ? this.api.updateSupplier(this.editingId, this.form)

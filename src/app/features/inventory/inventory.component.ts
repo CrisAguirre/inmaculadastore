@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
 export class InventoryComponent implements OnInit {
   products: any[] = [];
   categories: any[] = [];
+  suppliers: any[] = [];
   searchTerm = '';
   filterCategory = '';
   currentPage = 1;
@@ -20,7 +21,7 @@ export class InventoryComponent implements OnInit {
   editingProduct: any = null;
 
   // Form fields
-  form: any = { name: '', barcode: '', category: '', purchasePrice: null, salePrice: null, stock: 0, minStock: 5, description: '' };
+  form: any = { name: '', barcode: '', category: '', supplier: '', purchasePrice: null, salePrice: null, stock: 0, minStock: 5, description: '' };
 
   get pageArray(): number[] {
     return Array.from({ length: this.totalPages }, (_, i) => i + 1);
@@ -36,6 +37,7 @@ export class InventoryComponent implements OnInit {
   ngOnInit(): void {
     this.loadProducts();
     this.api.getCategories().subscribe({ next: (cats: any) => this.categories = cats });
+    this.api.getSuppliers({ active: 'true' }).subscribe({ next: (sups: any) => this.suppliers = sups });
   }
 
   loadProducts(): void {
@@ -57,7 +59,7 @@ export class InventoryComponent implements OnInit {
 
   openNewForm(): void {
     this.editingProduct = null;
-    this.form = { name: '', barcode: '', category: '', purchasePrice: null, salePrice: null, stock: 0, minStock: 5, description: '' };
+    this.form = { name: '', barcode: '', category: '', supplier: '', purchasePrice: null, salePrice: null, stock: 0, minStock: 5, description: '' };
     this.showForm = true;
   }
 
@@ -67,6 +69,7 @@ export class InventoryComponent implements OnInit {
       name: product.name,
       barcode: product.barcode,
       category: product.category?._id || '',
+      supplier: product.supplier?._id || '',
       purchasePrice: product.purchasePrice,
       salePrice: product.salePrice,
       stock: product.stock,
@@ -78,17 +81,19 @@ export class InventoryComponent implements OnInit {
 
   cancelForm(): void { this.showForm = false; this.editingProduct = null; }
 
-  onCategoryChange(): void {
-    if (!this.form.category || this.editingProduct) return;
-    this.api.getNextBarcode(this.form.category).subscribe({
+  onDependencyChange(): void {
+    if (!this.form.category || !this.form.supplier || this.editingProduct) return;
+    
+    // We pass both category and supplier to getNextBarcode. We might need to update api.service to accept supplierId.
+    this.api.getNextBarcode(this.form.category, this.form.supplier).subscribe({
       next: (r: any) => this.form.barcode = r.barcode,
       error: () => {}
     });
   }
 
   saveProduct(): void {
-    if (!this.form.name || !this.form.category || !this.form.barcode) {
-      Swal.fire('⚠️', 'Completa nombre, categoría y código', 'warning');
+    if (!this.form.name || !this.form.category || !this.form.supplier || !this.form.barcode) {
+      Swal.fire('⚠️', 'Completa nombre, categoría, proveedor y código', 'warning');
       return;
     }
     const obs = this.editingProduct
@@ -149,5 +154,10 @@ export class InventoryComponent implements OnInit {
   getCategoryCode(catId: string): string {
     const cat = this.categories.find((c: any) => c._id === catId);
     return cat?.code || '---';
+  }
+
+  getSupplierCode(supId: string): string {
+    const sup = this.suppliers.find((s: any) => s._id === supId);
+    return sup?.code || '--';
   }
 }
