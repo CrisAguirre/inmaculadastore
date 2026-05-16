@@ -68,6 +68,10 @@ import { Supplier } from '../../core/models/interfaces';
               <input class="form-input" [(ngModel)]="form.name" placeholder="Razón social o nombre" />
             </div>
             <div class="form-group">
+              <label>Código de Proveedor (2 dígitos) *</label>
+              <input class="form-input" [(ngModel)]="form.code" placeholder="Ej: 43" maxlength="2" />
+            </div>
+            <div class="form-group">
               <label>NIT / RUT / Cédula</label>
               <input class="form-input" [(ngModel)]="form.nit" placeholder="900.123.456-1" />
             </div>
@@ -153,8 +157,8 @@ export class SuppliersComponent implements OnInit {
   closeForm() { this.showForm = false; }
 
   save() {
-    if (!this.form.name || !this.form.categories || this.form.categories.length === 0) {
-      alert('El Nombre y al menos una Categoría son obligatorios');
+    if (!this.form.name || !this.form.code || !this.form.categories || this.form.categories.length === 0) {
+      alert('El Nombre, Código (2 dígitos) y al menos una Categoría son obligatorios');
       return;
     }
     this.saving = true;
