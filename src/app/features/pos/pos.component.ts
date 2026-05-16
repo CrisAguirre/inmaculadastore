@@ -76,8 +76,8 @@ import Swal from 'sweetalert2';
     .pos-layout { display: grid; grid-template-columns: 1fr 360px; gap: 1rem; min-height: calc(100vh - 100px); }
     .pos-search { margin-bottom: 0.75rem; }
     .pos-categories {
-      display: flex; gap: 0.375rem; overflow-x: auto; padding-bottom: 0.5rem;
-      margin-bottom: 0.75rem; scrollbar-width: none;
+      display: flex; gap: 0.375rem; flex-wrap: wrap; padding-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
     }
     .cat-btn {
       padding: 0.375rem 0.75rem; border-radius: 20px; border: 1px solid var(--bg-input);
