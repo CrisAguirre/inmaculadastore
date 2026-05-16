@@ -10,83 +10,6 @@
   </div>
 </div>
 
-<!-- ═══ FORMULARIO DE PRODUCTO ═══ -->
-<div class="neon-card product-form mb-3" *ngIf="showForm">
-  <div class="form-header">
-    <h3>{{ editingProduct ? '✏️ Editar Producto' : '➕ Registrar Producto' }}</h3>
-    <button class="btn-ghost btn-sm" (click)="cancelForm()">✕ Cerrar</button>
-  </div>
-
-  <div class="form-grid">
-    <div class="form-group">
-      <label class="form-label">Categoría *</label>
-      <select class="form-input" [(ngModel)]="form.category" (change)="onDependencyChange()">
-        <option value="" disabled>Seleccionar categoría...</option>
-        <option *ngFor="let c of categories" [value]="c._id">{{ c.icon }} {{ c.name }}</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Proveedor *</label>
-      <select class="form-input" [(ngModel)]="form.supplier" (change)="onDependencyChange()">
-        <option value="" disabled>Seleccionar proveedor...</option>
-        <option *ngFor="let s of suppliers" [value]="s._id">{{ s.name }}</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Código de Producto</label>
-      <input class="form-input" [(ngModel)]="form.barcode" readonly>
-      <small class="form-hint" *ngIf="form.category && form.supplier">Prefijo: {{ getCategoryCode(form.category) }}{{ getSupplierCode(form.supplier) }} + consecutivo</small>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Nombre del Producto</label>
-      <input class="form-input" [(ngModel)]="form.name" placeholder="Ej: Coca-Cola 350ml">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Precio de Compra ($)</label>
-      <input class="form-input" type="number" [(ngModel)]="form.purchasePrice" placeholder="0" min="0">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Precio de Venta ($)</label>
-      <input class="form-input" type="number" [(ngModel)]="form.salePrice" placeholder="0" min="0">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Stock Inicial</label>
-      <input class="form-input" type="number" [(ngModel)]="form.stock" min="0">
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">Stock Mínimo (alerta)</label>
-      <input class="form-input" type="number" [(ngModel)]="form.minStock" min="0">
-    </div>
-
-    <div class="form-group span-2">
-      <label class="form-label">Descripción (opcional)</label>
-      <input class="form-input" [(ngModel)]="form.description" placeholder="Detalles del producto...">
-    </div>
-  </div>
-
-  <!-- Margin indicator -->
-  <div class="margin-bar" *ngIf="form.purchasePrice && form.salePrice">
-    <span>Margen de ganancia:</span>
-    <span [class]="margin >= 30 ? 'margin-good' : margin >= 15 ? 'margin-ok' : 'margin-low'">
-      {{ margin | number:'1.1-1' }}% — Ganancia: ${{ (form.salePrice - form.purchasePrice) | number:'1.0-0' }}
-    </span>
-  </div>
-
-  <div class="form-actions">
-    <button class="btn-outline" (click)="cancelForm()">Cancelar</button>
-    <button class="btn-primary" (click)="saveProduct()">
-      {{ editingProduct ? '💾 Guardar Cambios' : '✅ Registrar Producto' }}
-    </button>
-  </div>
-</div>
-
 <!-- ═══ TABLA DE PRODUCTOS ═══ -->
 <div class="table-wrapper neon-card" style="padding:0;animation:none">
   <table class="data-table">
@@ -127,5 +50,81 @@
   <div style="display:flex;gap:0.25rem">
     <button class="btn-outline btn-sm" *ngFor="let p of pageArray" [class.btn-primary]="p === currentPage"
             (click)="goToPage(p)">{{ p }}</button>
+  </div>
+</div>
+
+<!-- ═══ MODAL FORMULARIO DE PRODUCTO ═══ -->
+<div class="modal-overlay" *ngIf="showForm" (click)="cancelForm()">
+  <div class="modal" (click)="$event.stopPropagation()" style="max-width:700px;">
+    <h2 class="modal-title">{{ editingProduct ? '✏️ Editar Producto' : '➕ Registrar Producto' }}</h2>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Categoría *</label>
+        <select class="form-input" [(ngModel)]="form.category" (change)="onDependencyChange()">
+          <option value="" disabled>Seleccionar categoría...</option>
+          <option *ngFor="let c of categories" [value]="c._id">{{ c.icon }} {{ c.name }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Proveedor *</label>
+        <select class="form-input" [(ngModel)]="form.supplier" (change)="onDependencyChange()">
+          <option value="" disabled>Seleccionar proveedor...</option>
+          <option *ngFor="let s of suppliers" [value]="s._id">{{ s.name }}</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Código de Producto</label>
+        <input class="form-input" [(ngModel)]="form.barcode" readonly>
+        <small class="form-hint" *ngIf="form.category && form.supplier">Prefijo: {{ getCategoryCode(form.category) }}{{ getSupplierCode(form.supplier) }} + consecutivo</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nombre del Producto</label>
+        <input class="form-input" [(ngModel)]="form.name" placeholder="Ej: Coca-Cola 350ml">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Precio de Compra ($)</label>
+        <input class="form-input" type="number" [(ngModel)]="form.purchasePrice" placeholder="0" min="0">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Precio de Venta ($)</label>
+        <input class="form-input" type="number" [(ngModel)]="form.salePrice" placeholder="0" min="0">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Stock Inicial</label>
+        <input class="form-input" type="number" [(ngModel)]="form.stock" min="0">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Stock Mínimo (alerta)</label>
+        <input class="form-input" type="number" [(ngModel)]="form.minStock" min="0">
+      </div>
+
+      <div class="form-group span-2">
+        <label class="form-label">Descripción (opcional)</label>
+        <input class="form-input" [(ngModel)]="form.description" placeholder="Detalles del producto...">
+      </div>
+    </div>
+
+    <!-- Margin indicator -->
+    <div class="margin-bar" *ngIf="form.purchasePrice && form.salePrice">
+      <span>Margen de ganancia:</span>
+      <span [class]="margin >= 30 ? 'margin-good' : margin >= 15 ? 'margin-ok' : 'margin-low'">
+        {{ margin | number:'1.1-1' }}% — Ganancia: ${{ (form.salePrice - form.purchasePrice) | number:'1.0-0' }}
+      </span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-outline" (click)="cancelForm()">Cancelar</button>
+      <button class="btn-primary" (click)="saveProduct()">
+        {{ editingProduct ? '💾 Guardar Cambios' : '✅ Registrar Producto' }}
+      </button>
+    </div>
   </div>
 </div>

@@ -33,18 +33,18 @@ import { Supplier } from '../../core/models/interfaces';
         <table *ngIf="!loading && suppliers.length > 0" class="data-table">
           <thead>
             <tr>
-              <th>Nombre</th><th>NIT/RUT</th><th>Contacto</th><th>Teléfono</th><th>Email</th><th>Estado</th><th>Acciones</th>
+              <th>Código</th><th>Nombre</th><th>NIT/RUT</th><th>Contacto</th><th>Teléfono</th><th>Estado</th><th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let s of suppliers">
+              <td><span class="badge badge-cyan">{{ s.code || '—' }}</span></td>
               <td><strong>{{ s.name }}</strong></td>
               <td>{{ s.nit || '—' }}</td>
               <td>{{ s.contactName || '—' }}</td>
               <td>{{ s.phone || '—' }}</td>
-              <td>{{ s.email || '—' }}</td>
               <td>
-                <span class="badge" [class.badge-success]="s.isActive" [class.badge-danger]="!s.isActive">
+                <span class="badge" [class.badge-green]="s.isActive" [class.badge-red]="!s.isActive">
                   {{ s.isActive ? 'Activo' : 'Inactivo' }}
                 </span>
               </td>
@@ -61,7 +61,7 @@ import { Supplier } from '../../core/models/interfaces';
       <!-- Modal Form -->
       <div class="modal-overlay" *ngIf="showForm" (click)="closeForm()">
         <div class="modal" (click)="$event.stopPropagation()">
-          <h2 class="modal-title">{{ editing ? 'Editar Proveedor' : 'Nuevo Proveedor' }}</h2>
+          <h2 class="modal-title">{{ editing ? '✏️ Editar Proveedor' : '➕ Nuevo Proveedor' }}</h2>
           <div class="form-grid">
             <div class="form-group">
               <label>Nombre *</label>
@@ -104,9 +104,9 @@ import { Supplier } from '../../core/models/interfaces';
             </div>
           </div>
           <div class="modal-actions">
-            <button class="btn-secondary" (click)="closeForm()">Cancelar</button>
+            <button class="btn-outline" (click)="closeForm()">Cancelar</button>
             <button class="btn-primary" (click)="save()" [disabled]="saving">
-              {{ saving ? 'Guardando...' : 'Guardar' }}
+              {{ saving ? 'Guardando...' : (editing ? 'Actualizar' : 'Guardar') }}
             </button>
           </div>
         </div>
