@@ -152,7 +152,11 @@ export class SuppliersComponent implements OnInit {
     this.form = {}; this.editing = false; this.editingId = ''; this.showForm = true;
   }
   edit(s: Supplier) {
-    this.form = { ...s }; this.editing = true; this.editingId = s._id; this.showForm = true;
+    this.form = JSON.parse(JSON.stringify(s));
+    if (!this.form.categories) this.form.categories = [];
+    this.editing = true; 
+    this.editingId = s._id; 
+    this.showForm = true;
   }
   closeForm() { this.showForm = false; }
 

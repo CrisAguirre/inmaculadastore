@@ -43,7 +43,7 @@ export interface PaginatedResponse<T> {
 // ── NUEVAS INTERFACES ────────────────────────────────────────────────────────
 
 export interface Supplier {
-  _id: string; name: string; contactName: string; phone: string;
+  _id: string; name: string; code: string; categories: string[]; contactName: string; phone: string;
   email: string; address: string; nit: string; notes: string; isActive: boolean;
   createdAt: string;
 }
