@@ -33,13 +33,17 @@ import { Supplier } from '../../core/models/interfaces';
         <table *ngIf="!loading && suppliers.length > 0" class="data-table">
           <thead>
             <tr>
-              <th>Código</th><th>Nombre</th><th>NIT/RUT</th><th>Contacto</th><th>Teléfono</th><th>Estado</th><th>Acciones</th>
+              <th>Código</th><th>Nombre</th><th>Categorías</th><th>NIT/RUT</th><th>Contacto</th><th>Teléfono</th><th>Estado</th><th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let s of suppliers">
               <td><span class="badge badge-cyan">{{ s.code || '—' }}</span></td>
               <td><strong>{{ s.name }}</strong></td>
+              <td class="cat-list">
+                <span class="badge badge-violet" *ngFor="let cat of (s.categories || [])">{{ cat.icon || '' }} {{ cat.name || cat }}</span>
+                <span *ngIf="!s.categories || s.categories.length === 0">—</span>
+              </td>
               <td>{{ s.nit || '—' }}</td>
               <td>{{ s.contactName || '—' }}</td>
               <td>{{ s.phone || '—' }}</td>
@@ -67,9 +71,10 @@ import { Supplier } from '../../core/models/interfaces';
               <label>Nombre *</label>
               <input class="form-input" [(ngModel)]="form.name" placeholder="Razón social o nombre" />
             </div>
-            <div class="form-group">
-              <label>Código de Proveedor (2 dígitos) *</label>
-              <input class="form-input" [(ngModel)]="form.code" placeholder="Ej: 43" maxlength="2" />
+            <div class="form-group" *ngIf="editing">
+              <label>Código de Proveedor</label>
+              <input class="form-input" [(ngModel)]="form.code" readonly />
+              <small style="color:#888; font-size:0.8rem">Código asignado automáticamente</small>
             </div>
             <div class="form-group">
               <label>NIT / RUT / Cédula</label>
@@ -119,6 +124,7 @@ import { Supplier } from '../../core/models/interfaces';
     .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
     .full-width { grid-column: 1 / -1; }
     .actions { display:flex; gap:.4rem; }
+    .cat-list { display:flex; flex-wrap:wrap; gap:0.25rem; }
   `]
 })
 export class SuppliersComponent implements OnInit {
@@ -153,7 +159,12 @@ export class SuppliersComponent implements OnInit {
   }
   edit(s: Supplier) {
     this.form = JSON.parse(JSON.stringify(s));
-    if (!this.form.categories) this.form.categories = [];
+    // Convert populated category objects to plain IDs for the <select>
+    if (this.form.categories && this.form.categories.length > 0) {
+      this.form.categories = this.form.categories.map((c: any) => c._id || c);
+    } else {
+      this.form.categories = [];
+    }
     this.editing = true; 
     this.editingId = s._id; 
     this.showForm = true;
@@ -161,8 +172,8 @@ export class SuppliersComponent implements OnInit {
   closeForm() { this.showForm = false; }
 
   save() {
-    if (!this.form.name || !this.form.code || !this.form.categories || this.form.categories.length === 0) {
-      alert('El Nombre, Código (2 dígitos) y al menos una Categoría son obligatorios');
+    if (!this.form.name || !this.form.categories || this.form.categories.length === 0) {
+      alert('El Nombre y al menos una Categoría son obligatorios');
       return;
     }
     this.saving = true;
