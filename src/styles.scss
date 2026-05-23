@@ -271,18 +271,18 @@ input, select, textarea { font-family: inherit; }
 .form-input {
   width: 100%;
   padding: 0.625rem 0.875rem;
-  background: var(--bg-input);
+  background-color: var(--bg-input) !important;
   border: 1.5px solid transparent;
   border-radius: var(--radius-sm);
   font-size: 0.9rem;
-  color: var(--text-primary);
+  color: var(--text-primary) !important;
   transition: all var(--transition-fast);
   outline: none;
 
   &:focus {
     border-color: var(--neon-cyan);
     box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
-    background: var(--bg-input-focus);
+    background-color: var(--bg-input-focus) !important;
   }
 
   option {
