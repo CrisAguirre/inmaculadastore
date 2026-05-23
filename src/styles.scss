@@ -9,6 +9,7 @@
   --bg-card: #FFFFFF;
   --bg-sidebar: #FAFBFD;
   --bg-input: #F0F2F5;
+  --bg-input-focus: #FFFFFF;
 
   /* Texto */
   --text-primary: #1A1D26;
@@ -51,6 +52,7 @@ html.dark {
   --bg-card: #151822;
   --bg-sidebar: #12141D;
   --bg-input: #1C202E;
+  --bg-input-focus: #252B3B;
 
   /* Texto oscuro */
   --text-primary: #F3F4F6;
@@ -280,7 +282,12 @@ input, select, textarea { font-family: inherit; }
   &:focus {
     border-color: var(--neon-cyan);
     box-shadow: 0 0 0 3px rgba(0,229,255,0.1);
-    background: #fff;
+    background: var(--bg-input-focus);
+  }
+
+  option {
+    background: var(--bg-card);
+    color: var(--text-primary);
   }
 
   &::placeholder { color: var(--text-muted); }
