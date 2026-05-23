@@ -1,13 +1,15 @@
 <div class="page-header">
   <h1>📦 Inventario</h1>
   <div class="header-actions">
-    <select class="form-input filter-select" [(ngModel)]="filterCategory" (change)="onFilterCategory()">
-      <option value="">Todas las categorías</option>
-      <option *ngFor="let c of categories" [value]="c._id">{{ c.icon }} {{ c.name }} ({{ c.code }})</option>
-    </select>
-    <input class="form-input search-input" placeholder="🔍 Buscar producto..." [(ngModel)]="searchTerm" (input)="onSearch()">
+    <input class="form-input search-input" placeholder="🔍 Buscar por nombre o código..." [(ngModel)]="searchTerm" (input)="onSearch()">
     <button class="btn-primary" (click)="openNewForm()" *ngIf="authService.hasRole('admin')">+ Nuevo Producto</button>
   </div>
+</div>
+
+<div class="pos-categories">
+  <button class="cat-btn" [class.active]="!filterCategory" (click)="filterCategory='';onFilterCategory()">Todos</button>
+  <button class="cat-btn" *ngFor="let c of categories" [class.active]="filterCategory === c._id"
+          (click)="filterCategory = c._id; onFilterCategory()">{{ c.icon }} {{ c.name }}</button>
 </div>
 
 <!-- ═══ TABLA DE PRODUCTOS ═══ -->

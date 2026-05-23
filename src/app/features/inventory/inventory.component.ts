@@ -41,7 +41,7 @@ export class InventoryComponent implements OnInit {
   }
 
   loadProducts(): void {
-    const params: any = { page: this.currentPage, limit: 20 };
+    const params: any = { page: this.currentPage, limit: 100 };
     if (this.searchTerm) params.search = this.searchTerm;
     if (this.filterCategory) params.category = this.filterCategory;
     this.api.getProducts(params).subscribe({
