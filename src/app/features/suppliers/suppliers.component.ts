@@ -33,7 +33,10 @@ import { Supplier } from '../../core/models/interfaces';
         <table *ngIf="!loading && suppliers.length > 0" class="data-table">
           <thead>
             <tr>
-              <th>Código</th><th>Nombre</th><th>Categorías</th><th>NIT/RUT</th><th>Contacto</th><th>Teléfono</th><th>Estado</th><th>Acciones</th>
+              <th (click)="sort('code')" class="sortable">Código <span *ngIf="sortColumn === 'code'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th (click)="sort('name')" class="sortable">Nombre <span *ngIf="sortColumn === 'name'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th (click)="sort('categories')" class="sortable">Categorías <span *ngIf="sortColumn === 'categories'">{{ sortAsc ? '▲' : '▼' }}</span></th>
+              <th>NIT/RUT</th><th>Contacto</th><th>Teléfono</th><th>Estado</th><th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -125,6 +128,8 @@ import { Supplier } from '../../core/models/interfaces';
     .full-width { grid-column: 1 / -1; }
     .actions { display:flex; gap:.4rem; }
     .cat-list { display:flex; flex-wrap:wrap; gap:0.25rem; }
+    .sortable { cursor: pointer; user-select: none; transition: background 0.2s; }
+    .sortable:hover { background-color: rgba(0, 229, 255, 0.1); color: var(--text-primary); }
   `]
 })
 export class SuppliersComponent implements OnInit {
@@ -132,6 +137,7 @@ export class SuppliersComponent implements OnInit {
   categories: any[] = [];
   loading = false; saving = false; showForm = false; editing = false;
   search = ''; showInactive = false;
+  sortColumn = 'name'; sortAsc = true;
 
   form: any = {};
   private editingId = '';
@@ -149,7 +155,7 @@ export class SuppliersComponent implements OnInit {
     if (this.search) params.search = this.search;
     if (!this.showInactive) params.active = 'true';
     this.api.getSuppliers(params).subscribe({
-      next: (data: Supplier[]) => { this.suppliers = data; this.loading = false; },
+      next: (data: Supplier[]) => { this.suppliers = data; this.applySort(); this.loading = false; },
       error: () => this.loading = false
     });
   }
@@ -194,6 +200,38 @@ export class SuppliersComponent implements OnInit {
     this.api.deleteSupplier(id).subscribe({
       next: () => this.load(),
       error: (err) => alert('Error al eliminar: ' + (err.error?.message || err.message))
+    });
+  }
+
+  sort(column: string) {
+    if (this.sortColumn === column) {
+      this.sortAsc = !this.sortAsc;
+    } else {
+      this.sortColumn = column;
+      this.sortAsc = true;
+    }
+    this.applySort();
+  }
+
+  applySort() {
+    this.suppliers.sort((a, b) => {
+      let valA: any = '';
+      let valB: any = '';
+      
+      if (this.sortColumn === 'code') {
+        valA = parseInt(a.code, 10) || 0;
+        valB = parseInt(b.code, 10) || 0;
+      } else if (this.sortColumn === 'name') {
+        valA = (a.name || '').toLowerCase();
+        valB = (b.name || '').toLowerCase();
+      } else if (this.sortColumn === 'categories') {
+        valA = (a.categories || []).map((c: any) => c.name || '').join(', ').toLowerCase();
+        valB = (b.categories || []).map((c: any) => c.name || '').join(', ').toLowerCase();
+      }
+
+      if (valA < valB) return this.sortAsc ? -1 : 1;
+      if (valA > valB) return this.sortAsc ? 1 : -1;
+      return 0;
     });
   }
 }
