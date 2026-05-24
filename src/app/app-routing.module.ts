@@ -19,6 +19,7 @@ const routes: Routes = [
       // ── NUEVAS RUTAS ────────────────────────────────────────────────────
       { path: 'suppliers',  loadChildren: () => import('./features/suppliers/suppliers.module').then(m => m.SuppliersModule),  canActivate: [RoleGuard], data: { roles: ['admin'] } },
       { path: 'purchases',  loadChildren: () => import('./features/purchases/purchases.module').then(m => m.PurchasesModule),  canActivate: [RoleGuard], data: { roles: ['admin'] } },
+      { path: 'debtors',    loadChildren: () => import('./features/debtors/debtors.module').then(m => m.DebtorsModule),      canActivate: [RoleGuard], data: { roles: ['admin'] } },
       { path: 'expenses',   loadChildren: () => import('./features/expenses/expenses.module').then(m => m.ExpensesModule),    canActivate: [RoleGuard], data: { roles: ['admin'] } },
       { path: 'finance',    loadChildren: () => import('./features/finance/finance.module').then(m => m.FinanceModule),       canActivate: [RoleGuard], data: { roles: ['admin'] } },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }

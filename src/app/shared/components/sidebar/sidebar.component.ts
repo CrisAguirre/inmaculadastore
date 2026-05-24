@@ -106,6 +106,7 @@ export class SidebarComponent {
           { divider: 'Compras' },
           { icon: '🏭', label: 'Proveedores',   route: '/suppliers' },
           { icon: '🛍️', label: 'Compras',       route: '/purchases' },
+          { icon: '👥', label: 'Deudores',      route: '/debtors' },
           // Gastos
           { divider: 'Gastos' },
           { icon: '💸', label: 'Gastos Operativos', route: '/expenses' },

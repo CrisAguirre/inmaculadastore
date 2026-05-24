@@ -376,4 +376,54 @@ export class ApiService {
     const params: any = months ? { months: months.toString() } : undefined;
     return this.cachedGet(k, this.http.get(`${this.baseUrl}/finance/monthly-pl`, { params }), TTL.finance);
   }
+
+  // ── Debtors (Deudores) ──────────────────────────────────────────────────
+
+  getDebtors(params?: any): Observable<any> {
+    const k = this.key('debtors', params);
+    return this.cachedGet(k, this.http.get(`${this.baseUrl}/debtors`, { params }), TTL.suppliers);
+  }
+
+  getDebtor(id: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/debtors/${id}`);
+  }
+
+  createDebtor(data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/debtors`, data).pipe(
+      tap(() => this.preload.invalidatePrefix('debtors'))
+    );
+  }
+
+  updateDebtor(id: string, data: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/debtors/${id}`, data).pipe(
+      tap(() => this.preload.invalidatePrefix('debtors'))
+    );
+  }
+
+  deleteDebtor(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/debtors/${id}`).pipe(
+      tap(() => this.preload.invalidatePrefix('debtors'))
+    );
+  }
+
+  addDebtorTransaction(id: string, data: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/debtors/${id}/transactions`, data).pipe(
+      tap(() => this.preload.invalidatePrefix('debtors'))
+    );
+  }
+
+  getDebtorTransactions(id: string): Observable<any> {
+    return this.http.get(`${this.baseUrl}/debtors/${id}/transactions`);
+  }
+
+  getNextDebtorCode(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/debtors/next-code`);
+  }
+
+  checkDebtorMora(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/debtors/check-mora`, {}).pipe(
+      tap(() => this.preload.invalidatePrefix('alerts'))
+    );
+  }
 }
+

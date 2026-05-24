@@ -488,3 +488,92 @@ input, select, textarea { font-family: inherit; }
   padding-top: 1rem;
   border-top: 1px solid var(--bg-input);
 }
+
+/* ══════════════════════════════════════════════════
+   🏷️ BADGE VARIANTS (additional)
+   ══════════════════════════════════════════════════ */
+.badge-success { background: rgba(0,230,118,0.12); color: #00C853; }
+.badge-danger  { background: rgba(255,23,68,0.12);  color: #FF1744; }
+.badge-warning { background: rgba(255,200,0,0.15);  color: #FFC800; }
+.badge-amber   { background: rgba(255,145,0,0.12);  color: #FF6D00; }
+
+/* ══════════════════════════════════════════════════
+   📦 PAGE LAYOUT UTILITIES
+   ══════════════════════════════════════════════════ */
+.page-container { animation: fadeIn 0.3s ease; }
+.page-subtitle  { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem; }
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(0,229,255,0.08);
+}
+
+.table-card {
+  padding: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-card .data-table { margin: 0; }
+
+/* ══════════════════════════════════════════════════
+   ⏳ LOADING & EMPTY STATES
+   ══════════════════════════════════════════════════ */
+.loading-state,
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.loading-state {
+  animation: shimmer 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, transparent 0%, rgba(0,229,255,0.04) 50%, transparent 100%);
+  background-size: 200% 100%;
+}
+
+/* ══════════════════════════════════════════════════
+   🔴 BTN-ICON VARIANTS
+   ══════════════════════════════════════════════════ */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px; height: 34px;
+  padding: 0; border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 1rem;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+.btn-icon:hover { background: rgba(0,229,255,0.08); }
+.btn-icon-danger:hover { background: rgba(255,23,68,0.1); }
+
+/* ══════════════════════════════════════════════════
+   📝 SECONDARY BUTTON
+   ══════════════════════════════════════════════════ */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid rgba(0,229,255,0.2);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.btn-secondary:hover {
+  border-color: var(--neon-cyan);
+  background: rgba(0,229,255,0.05);
+}
