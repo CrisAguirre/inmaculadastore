@@ -1,7 +1,23 @@
 <div class="page-header">
   <h1>📦 Inventario</h1>
-  <div class="header-actions">
+  <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center; position: relative;">
     <input class="form-input search-input" placeholder="🔍 Buscar por nombre o código..." [(ngModel)]="searchTerm" (input)="onSearch()">
+    
+    <!-- Multiselect Proveedores -->
+    <div class="dropdown-container" style="position: relative;">
+      <button class="btn-outline" (click)="showSupplierDropdown = !showSupplierDropdown; $event.stopPropagation()" style="display:flex;align-items:center;gap:0.5rem;">
+        🏢 Proveedores
+        <span class="badge badge-cyan" *ngIf="filterSuppliers.length > 0">{{ filterSuppliers.length }}</span>
+      </button>
+      <div *ngIf="showSupplierDropdown" class="dropdown-menu neon-card" style="position:absolute; top:100%; right:0; mt-1; min-width: 200px; z-index: 100; max-height: 250px; overflow-y: auto; padding: 0.5rem; margin-top: 0.5rem; background: var(--bg-card); border: 1px solid var(--bg-input);">
+        <div *ngFor="let s of suppliers" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; cursor: pointer; color: var(--text-primary);" (click)="toggleSupplier(s._id, $event)">
+          <input type="checkbox" [checked]="isSupplierSelected(s._id)" style="cursor: pointer;" (click)="$event.stopPropagation(); toggleSupplier(s._id, $event)">
+          <span>{{ s.name }}</span>
+        </div>
+        <div *ngIf="suppliers.length === 0" style="text-align:center;color:var(--text-muted);font-size:0.8rem">No hay proveedores</div>
+      </div>
+    </div>
+
     <button class="btn-primary" (click)="openNewForm()" *ngIf="authService.hasRole('admin')">+ Nuevo Producto</button>
   </div>
 </div>

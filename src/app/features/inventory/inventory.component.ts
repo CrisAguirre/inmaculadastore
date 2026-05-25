@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import Swal from 'sweetalert2';
@@ -8,12 +10,16 @@ import Swal from 'sweetalert2';
   templateUrl: './inventory.component.html',
   styleUrls: ['./inventory.component.scss']
 })
-export class InventoryComponent implements OnInit {
+export class InventoryComponent implements OnInit, OnDestroy {
   products: any[] = [];
   categories: any[] = [];
   suppliers: any[] = [];
   searchTerm = '';
+  searchSubject = new Subject<string>();
+  searchSubscription!: Subscription;
   filterCategory = '';
+  filterSuppliers: string[] = [];
+  showSupplierDropdown = false;
   currentPage = 1;
   totalPages = 1;
   totalProducts = 0;
@@ -34,16 +40,34 @@ export class InventoryComponent implements OnInit {
 
   constructor(public authService: AuthService, private api: ApiService) {}
 
+  @HostListener('document:click')
+  onDocumentClick() {
+    this.showSupplierDropdown = false;
+  }
+
   ngOnInit(): void {
     this.loadProducts();
     this.api.getCategories().subscribe({ next: (cats: any) => this.categories = cats });
     this.api.getSuppliers({ active: 'true' }).subscribe({ next: (sups: any) => this.suppliers = sups });
+
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(() => {
+      this.currentPage = 1;
+      this.loadProducts();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchSubscription) this.searchSubscription.unsubscribe();
   }
 
   loadProducts(): void {
     const params: any = { page: this.currentPage, limit: 100 };
     if (this.searchTerm) params.search = this.searchTerm;
     if (this.filterCategory) params.category = this.filterCategory;
+    if (this.filterSuppliers.length > 0) params.supplier = this.filterSuppliers.join(',');
     this.api.getProducts(params).subscribe({
       next: (res: any) => {
         this.products = res.products;
@@ -53,8 +77,25 @@ export class InventoryComponent implements OnInit {
     });
   }
 
-  onSearch(): void { this.currentPage = 1; this.loadProducts(); }
+  onSearch(): void { this.searchSubject.next(this.searchTerm); }
   onFilterCategory(): void { this.currentPage = 1; this.loadProducts(); }
+  
+  toggleSupplier(supplierId: string, event: Event): void {
+    event.stopPropagation();
+    const index = this.filterSuppliers.indexOf(supplierId);
+    if (index > -1) {
+      this.filterSuppliers.splice(index, 1);
+    } else {
+      this.filterSuppliers.push(supplierId);
+    }
+    this.currentPage = 1;
+    this.loadProducts();
+  }
+
+  isSupplierSelected(supplierId: string): boolean {
+    return this.filterSuppliers.includes(supplierId);
+  }
+
   goToPage(p: number): void { this.currentPage = p; this.loadProducts(); }
 
   openNewForm(): void {
