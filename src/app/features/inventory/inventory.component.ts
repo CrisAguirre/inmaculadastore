@@ -200,6 +200,13 @@ export class InventoryComponent implements OnInit, OnDestroy {
       Swal.fire('⚠️', 'Completa nombre, categoría, proveedor y código', 'warning');
       return;
     }
+
+    // Validación solicitada: No permitir registro si el stock inicial es 0 o menor
+    if (!this.editingProduct && (!this.form.stock || this.form.stock <= 0)) {
+      Swal.fire('⚠️', 'El stock inicial no puede ser cero al registrar un nuevo producto', 'warning');
+      return;
+    }
+
     const obs = this.editingProduct
       ? this.api.updateProduct(this.editingProduct._id, this.form)
       : this.api.createProduct(this.form);
@@ -238,14 +245,36 @@ export class InventoryComponent implements OnInit, OnDestroy {
     });
   }
 
-  deleteProduct(product: any): void {
+  toggleStatus(product: any): void {
+    const action = product.isActive ? 'desactivar' : 'activar';
     Swal.fire({
-      title: '¿Desactivar producto?', text: `${product.name} (${product.barcode})`,
-      icon: 'warning', showCancelButton: true, confirmButtonColor: '#FF1744',
-      confirmButtonText: 'Sí, desactivar'
+      title: `¿${action === 'activar' ? 'Activar' : 'Desactivar'} producto?`, 
+      text: `${product.name} (${product.barcode})`,
+      icon: 'question', showCancelButton: true, confirmButtonColor: '#00E5FF',
+      confirmButtonText: `Sí, ${action}`
     }).then(r => {
       if (r.isConfirmed) {
-        this.api.deleteProduct(product._id).subscribe({ next: () => this.fetchProducts() });
+        this.api.updateProduct(product._id, { isActive: !product.isActive }).subscribe({ 
+          next: () => this.fetchProducts(),
+          error: (err: any) => Swal.fire('❌', err.error?.message, 'error')
+        });
+      }
+    });
+  }
+
+  deleteProduct(product: any): void {
+    Swal.fire({
+      title: '⚠️ ¿ELIMINAR DEFINITIVAMENTE?', 
+      html: `Estás a punto de borrar físicamente <strong>${product.name}</strong>.<br><br><span style="color:#FF1744">¡Esta acción NO se puede deshacer y podría afectar el historial de ventas pasadas!</span>`,
+      icon: 'warning', showCancelButton: true, confirmButtonColor: '#FF1744',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(r => {
+      if (r.isConfirmed) {
+        this.api.deleteProduct(product._id).subscribe({ 
+          next: () => this.fetchProducts(),
+          error: (err: any) => Swal.fire('❌', err.error?.message, 'error')
+        });
       }
     });
   }

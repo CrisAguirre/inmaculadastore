@@ -58,8 +58,9 @@
         <td><span [class]="p.isActive ? 'badge badge-green' : 'badge badge-red'">{{ p.isActive ? 'Activo' : 'Inactivo' }}</span></td>
         <td *ngIf="authService.hasRole('admin')">
           <button class="btn-ghost btn-sm" (click)="openEditForm(p)" title="Editar">✏️</button>
-          <button class="btn-ghost btn-sm" (click)="adjustStock(p)" title="Ajustar stock">📦</button>
-          <button class="btn-ghost btn-sm" (click)="deleteProduct(p)" title="Desactivar">🗑️</button>
+          <button class="btn-ghost btn-sm" (click)="adjustStock(p)" title="Ajustar stock" *ngIf="p.isActive">📦</button>
+          <button class="btn-ghost btn-sm" (click)="toggleStatus(p)" [title]="p.isActive ? 'Desactivar' : 'Activar'">{{ p.isActive ? '🔴' : '🟢' }}</button>
+          <button class="btn-ghost btn-sm" (click)="deleteProduct(p)" title="Eliminar definitivamente" *ngIf="!p.isActive">🗑️</button>
         </td>
       </tr>
       <tr *ngIf="products.length === 0">

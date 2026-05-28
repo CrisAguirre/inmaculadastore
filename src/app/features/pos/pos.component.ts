@@ -160,7 +160,10 @@ export class PosComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.getAllProducts().subscribe({
-      next: (res: any) => { this.products = res.products; this.filteredProducts = [...this.products]; }
+      next: (res: any) => { 
+        this.products = res.products.filter((p: any) => p.isActive !== false); 
+        this.filteredProducts = [...this.products]; 
+      }
     });
     this.api.getCategories().subscribe({ next: (cats: any) => this.categories = cats });
     this.api.getSuppliers({ active: 'true' }).subscribe({ next: (sups: any) => this.suppliers = sups });
