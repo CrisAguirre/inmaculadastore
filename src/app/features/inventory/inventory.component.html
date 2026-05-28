@@ -33,8 +33,14 @@
   <table class="data-table">
     <thead>
       <tr>
-        <th>Código</th><th>Producto</th><th>Categoría</th><th>Compra</th><th>Venta</th>
-        <th>Stock</th><th>Estado</th><th *ngIf="authService.hasRole('admin')">Acciones</th>
+        <th (click)="sortBy('barcode')" style="cursor:pointer">Código <span *ngIf="sortColumn==='barcode'">{{sortDirection==='asc'?'↑':'↓'}}</span></th>
+        <th (click)="sortBy('name')" style="cursor:pointer">Producto <span *ngIf="sortColumn==='name'">{{sortDirection==='asc'?'↑':'↓'}}</span></th>
+        <th (click)="sortBy('categoryName')" style="cursor:pointer">Categoría <span *ngIf="sortColumn==='categoryName'">{{sortDirection==='asc'?'↑':'↓'}}</span></th>
+        <th (click)="sortBy('purchasePrice')" style="cursor:pointer">Compra <span *ngIf="sortColumn==='purchasePrice'">{{sortDirection==='asc'?'↑':'↓'}}</span></th>
+        <th (click)="sortBy('salePrice')" style="cursor:pointer">Venta <span *ngIf="sortColumn==='salePrice'">{{sortDirection==='asc'?'↑':'↓'}}</span></th>
+        <th (click)="sortBy('stock')" style="cursor:pointer">Stock <span *ngIf="sortColumn==='stock'">{{sortDirection==='asc'?'↑':'↓'}}</span></th>
+        <th (click)="sortBy('isActive')" style="cursor:pointer">Estado <span *ngIf="sortColumn==='isActive'">{{sortDirection==='asc'?'↑':'↓'}}</span></th>
+        <th *ngIf="authService.hasRole('admin')">Acciones</th>
       </tr>
     </thead>
     <tbody>

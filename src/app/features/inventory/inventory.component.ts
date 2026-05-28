@@ -25,6 +25,8 @@ export class InventoryComponent implements OnInit, OnDestroy {
   totalPages = 1;
   totalProducts = 0;
   itemsPerPage = 100;
+  sortColumn: string = '';
+  sortDirection: 'asc' | 'desc' = 'asc';
   showForm = false;
   editingProduct: any = null;
 
@@ -97,6 +99,26 @@ export class InventoryComponent implements OnInit, OnDestroy {
       return matchSearch && matchCat && matchSupplier;
     });
 
+    if (this.sortColumn) {
+      filtered.sort((a, b) => {
+        let valA = a[this.sortColumn];
+        let valB = b[this.sortColumn];
+        
+        // Casos especiales para objetos anidados
+        if (this.sortColumn === 'categoryName') {
+          valA = a.category?.name || '';
+          valB = b.category?.name || '';
+        }
+
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+
+        if (valA < valB) return this.sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return this.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
     this.totalProducts = filtered.length;
     this.totalPages = Math.ceil(this.totalProducts / this.itemsPerPage) || 1;
     
@@ -111,6 +133,16 @@ export class InventoryComponent implements OnInit, OnDestroy {
   onSearch(): void { this.searchSubject.next(this.searchTerm); }
   onFilterCategory(): void { this.currentPage = 1; this.applyFilters(); }
   
+  sortBy(column: string): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
+  }
+
   toggleSupplier(supplierId: string, event: Event): void {
     event.stopPropagation();
     const index = this.filterSuppliers.indexOf(supplierId);
