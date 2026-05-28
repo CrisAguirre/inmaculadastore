@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
   styleUrls: ['./inventory.component.scss']
 })
 export class InventoryComponent implements OnInit, OnDestroy {
+  allProducts: any[] = [];
   products: any[] = [];
   categories: any[] = [];
   suppliers: any[] = [];
@@ -23,6 +24,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
   currentPage = 1;
   totalPages = 1;
   totalProducts = 0;
+  itemsPerPage = 100;
   showForm = false;
   editingProduct: any = null;
 
@@ -46,7 +48,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.loadProducts();
+    this.fetchProducts();
     this.api.getCategories().subscribe({ next: (cats: any) => this.categories = cats });
     this.api.getSuppliers({ active: 'true' }).subscribe({ next: (sups: any) => this.suppliers = sups });
 
@@ -55,7 +57,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
       distinctUntilChanged()
     ).subscribe(() => {
       this.currentPage = 1;
-      this.loadProducts();
+      this.applyFilters();
     });
   }
 
@@ -63,22 +65,51 @@ export class InventoryComponent implements OnInit, OnDestroy {
     if (this.searchSubscription) this.searchSubscription.unsubscribe();
   }
 
-  loadProducts(): void {
-    const params: any = { page: this.currentPage, limit: 100 };
-    if (this.searchTerm) params.search = this.searchTerm;
-    if (this.filterCategory) params.category = this.filterCategory;
-    if (this.filterSuppliers.length > 0) params.supplier = this.filterSuppliers.join(',');
-    this.api.getProducts(params).subscribe({
+  fetchProducts(): void {
+    this.api.getAllProducts().subscribe({
       next: (res: any) => {
-        this.products = res.products;
-        this.totalPages = res.pages;
-        this.totalProducts = res.total;
+        this.allProducts = res.products || [];
+        this.applyFilters();
       }
     });
   }
 
+  normalizeString(str: string): string {
+    return str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : '';
+  }
+
+  applyFilters(): void {
+    const searchTerms = this.normalizeString(this.searchTerm).split(' ').filter(t => t.length > 0);
+    
+    let filtered = this.allProducts.filter(p => {
+      const pName = this.normalizeString(p.name);
+      const pBarcode = p.barcode ? p.barcode.toLowerCase() : '';
+      
+      const matchSearch = searchTerms.length === 0 || searchTerms.every(term => 
+        pName.includes(term) || pBarcode.includes(term)
+      );
+
+      const matchCat = !this.filterCategory || (p.category?._id || p.category) === this.filterCategory;
+        
+      const matchSupplier = this.filterSuppliers.length === 0 || 
+        this.filterSuppliers.includes(p.supplier?._id || p.supplier);
+
+      return matchSearch && matchCat && matchSupplier;
+    });
+
+    this.totalProducts = filtered.length;
+    this.totalPages = Math.ceil(this.totalProducts / this.itemsPerPage) || 1;
+    
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = 1;
+    }
+
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    this.products = filtered.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
   onSearch(): void { this.searchSubject.next(this.searchTerm); }
-  onFilterCategory(): void { this.currentPage = 1; this.loadProducts(); }
+  onFilterCategory(): void { this.currentPage = 1; this.applyFilters(); }
   
   toggleSupplier(supplierId: string, event: Event): void {
     event.stopPropagation();
@@ -89,14 +120,14 @@ export class InventoryComponent implements OnInit, OnDestroy {
       this.filterSuppliers.push(supplierId);
     }
     this.currentPage = 1;
-    this.loadProducts();
+    this.applyFilters();
   }
 
   isSupplierSelected(supplierId: string): boolean {
     return this.filterSuppliers.includes(supplierId);
   }
 
-  goToPage(p: number): void { this.currentPage = p; this.loadProducts(); }
+  goToPage(p: number): void { this.currentPage = p; this.applyFilters(); }
 
   openNewForm(): void {
     this.editingProduct = null;
@@ -144,7 +175,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
       next: () => {
         this.showForm = false;
         this.editingProduct = null;
-        this.loadProducts();
+        this.fetchProducts();
         Swal.fire('✅', this.editingProduct ? 'Producto actualizado' : 'Producto registrado', 'success');
       },
       error: (err: any) => Swal.fire('❌', err.error?.message || 'Error al guardar', 'error')
@@ -170,7 +201,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
     });
     if (!value) return;
     this.api.updateStock(product._id, value).subscribe({
-      next: () => { this.loadProducts(); Swal.fire('✅', 'Stock actualizado', 'success'); },
+      next: () => { this.fetchProducts(); Swal.fire('✅', 'Stock actualizado', 'success'); },
       error: (err: any) => Swal.fire('❌', err.error?.message, 'error')
     });
   }
@@ -182,7 +213,7 @@ export class InventoryComponent implements OnInit, OnDestroy {
       confirmButtonText: 'Sí, desactivar'
     }).then(r => {
       if (r.isConfirmed) {
-        this.api.deleteProduct(product._id).subscribe({ next: () => this.loadProducts() });
+        this.api.deleteProduct(product._id).subscribe({ next: () => this.fetchProducts() });
       }
     });
   }

@@ -159,7 +159,7 @@ export class PosComponent implements OnInit {
   constructor(private api: ApiService) {}
 
   ngOnInit(): void {
-    this.api.getProducts({ limit: 1000, active: 'true' }).subscribe({
+    this.api.getAllProducts().subscribe({
       next: (res: any) => { this.products = res.products; this.filteredProducts = [...this.products]; }
     });
     this.api.getCategories().subscribe({ next: (cats: any) => this.categories = cats });

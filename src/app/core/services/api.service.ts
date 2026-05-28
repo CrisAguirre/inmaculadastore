@@ -52,6 +52,18 @@ export class ApiService {
 
   // ── Products ──────────────────────────────────────────────────────────────
 
+  /**
+   * Returns ALL active products from cache or /products/all.
+   * Both POS and Inventory use this for local-first search.
+   */
+  getAllProducts(): Observable<any> {
+    return this.cachedGet(
+      'all-products',
+      this.http.get(`${this.baseUrl}/products/all`),
+      TTL.products
+    );
+  }
+
   getProducts(params?: any): Observable<any> {
     const k = this.key('products', params);
     return this.cachedGet(k, this.http.get(`${this.baseUrl}/products`, { params }), TTL.products);
@@ -63,19 +75,19 @@ export class ApiService {
 
   createProduct(data: any): Observable<any> {
     return this.http.post(`${this.baseUrl}/products`, data).pipe(
-      tap(() => this.preload.invalidatePrefix('products'))
+      tap(() => { this.preload.invalidatePrefix('products'); this.preload.invalidate('all-products'); })
     );
   }
 
   updateProduct(id: string, data: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/products/${id}`, data).pipe(
-      tap(() => { this.preload.invalidatePrefix('products'); this.preload.invalidate(`product:${id}`); })
+      tap(() => { this.preload.invalidatePrefix('products'); this.preload.invalidate(`product:${id}`); this.preload.invalidate('all-products'); })
     );
   }
 
   deleteProduct(id: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/products/${id}`).pipe(
-      tap(() => { this.preload.invalidatePrefix('products'); this.preload.invalidate(`product:${id}`); })
+      tap(() => { this.preload.invalidatePrefix('products'); this.preload.invalidate(`product:${id}`); this.preload.invalidate('all-products'); })
     );
   }
 
@@ -84,6 +96,7 @@ export class ApiService {
       tap(() => {
         this.preload.invalidatePrefix('products');
         this.preload.invalidate(`product:${id}`);
+        this.preload.invalidate('all-products');
         this.preload.invalidatePrefix('alerts');
         this.preload.invalidatePrefix('sales-summary');
       })
