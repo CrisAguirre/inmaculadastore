@@ -128,6 +128,15 @@ export class SidebarComponent {
         { icon: '🌐', label: 'Tienda Virtual',  route: '/storefront' },
         { icon: '⚙️', label: 'Configuración',    route: '/settings' }
       ];
+    } else if (role === 'operador') {
+      this.menuItems = [
+        { divider: 'Operaciones' },
+        { icon: '📦', label: 'Inventario',      route: '/inventory' },
+        { icon: '🛒', label: 'Punto de Venta',  route: '/pos' },
+        { icon: '💰', label: 'Caja',            route: '/cash' },
+        { divider: 'Gestión' },
+        { icon: '👥', label: 'Deudores',        route: '/debtors' }
+      ];
     }
   }
 }
