@@ -105,6 +105,8 @@ import { Debtor, DebtorTransaction } from '../../core/models/interfaces';
                 <span class="badge badge-orange" *ngIf="d.totalDebt > 0 && !isMora(d)">Debe</span>
               </td>
               <td class="actions">
+                <button class="btn-icon" style="color: #00E676;" title="Abonar" (click)="quickTransaction(d, 'abono')" [disabled]="d.totalDebt === 0">💵</button>
+                <button class="btn-icon" style="color: #7C4DFF;" title="Aumentar Crédito" (click)="quickTransaction(d, 'aumento_credito')">➕</button>
                 <button class="btn-icon" title="Ver detalle y transacciones" (click)="viewDetail(d)">👁️</button>
                 <button class="btn-icon" title="Editar" (click)="edit(d)">✏️</button>
                 <button class="btn-icon btn-icon-danger" title="Desactivar"
@@ -520,6 +522,13 @@ export class DebtorsComponent implements OnInit {
   }
 
   closeDetail() { this.showDetail = false; this.selected = null; }
+
+  quickTransaction(d: Debtor, type: string) {
+    this.viewDetail(d);
+    setTimeout(() => {
+      this.openTransaction(type);
+    }, 50);
+  }
 
   // ── Transaction Actions ─────────────────────────────────────────────────
 
