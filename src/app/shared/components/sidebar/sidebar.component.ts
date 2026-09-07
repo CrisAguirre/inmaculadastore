@@ -121,6 +121,7 @@ export class SidebarComponent {
         // Inteligencia
         { divider: 'Inteligencia' },
         { icon: '🧠', label: 'Centro Financiero', route: '/finance' },
+        { icon: '📷', label: 'Scanner IA',        route: '/scanner' },
         { icon: '📈', label: 'Reportes',        route: '/reports' },
         { icon: '🔔', label: 'Alertas',         route: '/alerts' },
         // Configuración
@@ -132,6 +133,7 @@ export class SidebarComponent {
       this.menuItems = [
         { divider: 'Operaciones' },
         { icon: '📦', label: 'Inventario',      route: '/inventory' },
+        { icon: '📷', label: 'Scanner IA',       route: '/scanner' },
         { icon: '🛒', label: 'Punto de Venta',  route: '/pos' },
         { icon: '💰', label: 'Caja',            route: '/cash' },
         { divider: 'Gestión' },

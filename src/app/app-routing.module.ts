@@ -22,6 +22,7 @@ const routes: Routes = [
       { path: 'debtors',    loadChildren: () => import('./features/debtors/debtors.module').then(m => m.DebtorsModule),      canActivate: [RoleGuard], data: { roles: ['admin', 'cajero', 'operador'] } },
       { path: 'expenses',   loadChildren: () => import('./features/expenses/expenses.module').then(m => m.ExpensesModule),    canActivate: [RoleGuard], data: { roles: ['admin'] } },
       { path: 'finance',    loadChildren: () => import('./features/finance/finance.module').then(m => m.FinanceModule),       canActivate: [RoleGuard], data: { roles: ['admin'] } },
+      { path: 'scanner',    loadChildren: () => import('./features/scanner/scanner.module').then(m => m.ScannerModule),  canActivate: [RoleGuard], data: { roles: ['admin', 'operador'] } },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },

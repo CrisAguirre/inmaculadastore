@@ -1,0 +1,219 @@
+<div class="page-header">
+  <h1>📷 Scanner de Inventario</h1>
+  <div class="header-actions">
+    <div class="scanner-status" [class.running]="scannerRunning">
+      <span class="status-dot"></span>
+      <span>{{ scannerRunning ? 'Scanner Activo' : 'Scanner Detenido' }}</span>
+    </div>
+    <button *ngIf="authService.hasRole('admin')" class="btn-outline btn-sm" (click)="scannerRunning ? stopScanner() : startScanner()">
+      {{ scannerRunning ? '⏹️ Detener' : '▶️ Iniciar' }}
+    </button>
+    <button class="tab-btn" [class.active]="selectedTab === 'scan'" (click)="selectedTab = 'scan'">📷 Escanear</button>
+    <button class="tab-btn" [class.active]="selectedTab === 'catalog'" (click)="selectedTab = 'catalog'">📚 Catálogo</button>
+  </div>
+</div>
+
+<div class="scanner-container" *ngIf="selectedTab === 'scan'">
+  <div class="scan-panel">
+    <div class="upload-section neon-card">
+      <h3>📤 Cargar Imagen</h3>
+      <p class="hint">Sube una foto de productos apilados en la tienda</p>
+
+      <div class="upload-area" (click)="fileInput.click()" *ngIf="!imagePreview">
+        <div class="upload-icon">📷</div>
+        <p>Haz clic para seleccionar imagen</p>
+        <small>Formatos: JPG, PNG (máx 10MB)</small>
+      </div>
+
+      <div class="image-preview" *ngIf="imagePreview">
+        <img [src]="imagePreview" alt="Preview">
+        <button class="btn-clear" (click)="imagePreview = null; uploadedImage = null; scanResults = null">✕</button>
+      </div>
+
+      <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display:none">
+
+      <div class="scan-options" *ngIf="imagePreview && !scanResults">
+        <p class="hint">📷 La imagen será analizada para detectar productos</p>
+      </div>
+
+      <button class="btn-primary btn-scan" *ngIf="imagePreview && !isScanning && !scanResults" (click)="scanImage()" [disabled]="!scannerRunning">
+        🔍 Escanear Productos
+      </button>
+
+      <button class="btn-primary btn-scan" *ngIf="isScanning" disabled>
+        <span class="spinner"></span> Procesando...
+      </button>
+
+      <div class="scanner-warning" *ngIf="!scannerRunning && imagePreview">
+        ⚠️ Inicia el scanner antes de procesar
+      </div>
+    </div>
+
+    <div class="results-section" *ngIf="scanResults?.success">
+      <div class="results-summary neon-card">
+        <h3>📊 Resultados del Escaneo</h3>
+        <div class="summary-stats">
+          <div class="stat-card">
+            <span class="stat-value">{{ scanResults.total_products }}</span>
+            <span class="stat-label">Total Productos</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value">{{ scanResults.unique_products }}</span>
+            <span class="stat-label">Tipos Diferentes</span>
+          </div>
+        </div>
+
+        <div class="action-buttons" *ngIf="!scanResults.stock_updated">
+          <button class="btn-primary" (click)="confirmUpdateStock()">
+            📦 Actualizar Stock
+          </button>
+          <button class="btn-outline" (click)="scanResults = null; imagePreview = null">
+            🔄 Escanear Otra Imagen
+          </button>
+        </div>
+
+        <div class="detected-products">
+          <h4>🔍 Productos Detectados</h4>
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Confianza</th>
+                <th>Estado BD</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let p of scanResults.products">
+                <td><strong>{{ p.name }}</strong></td>
+                <td><span class="count-badge">{{ p.count }}</span></td>
+                <td>
+                  <span class="confidence-badge" *ngIf="p.confidence">{{ formatConfidence(p.confidence) }}</span>
+                  <span class="confidence-badge" *ngIf="!p.confidence">-</span>
+                </td>
+                <td>
+                  <span class="badge badge-green" *ngIf="getProductByName(p.name)">✓ Vinculado</span>
+                  <span class="badge badge-orange" *ngIf="!getProductByName(p.name)">⚠ Sin vínculo</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="stock-updates" *ngIf="scanResults.stock_updated && getUpdatedProducts().length > 0">
+          <h4>📦 Stock Actualizado</h4>
+          <div class="update-list">
+            <div class="update-item" *ngFor="let u of getUpdatedProducts()">
+              <span class="product-name">{{ u.product }}</span>
+              <span class="stock-change">
+                {{ u.old_stock }} → <strong>{{ u.new_stock }}</strong>
+                <span class="diff" [class.positive]="u.difference > 0" [class.negative]="u.difference < 0">
+                  ({{ u.difference > 0 ? '+' : '' }}{{ u.difference }})
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="unmapped-products" *ngIf="getUnmatchedProducts().length > 0">
+          <h4>⚠️ Productos No Reconocidos</h4>
+          <p class="hint">Estos productos fueron detectados pero no se encontraron en la base de datos</p>
+          <div class="unmapped-list">
+            <div class="unmapped-item" *ngFor="let u of getUnmatchedProducts()">
+              <span>{{ u.name }}</span>
+              <span class="badge badge-red">{{ u.count }} unidades</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tips-section neon-card">
+    <h3>💡 Consejos para un buen escaneo</h3>
+    <ul>
+      <li>📷 Usa fotos de <strong>alta resolución</strong></li>
+      <li>📦 Asegúrate de que los productos estén <strong>bien apilados</strong></li>
+      <li>💡 Buena <strong>iluminación</strong> mejora la detección</li>
+      <li>🎯 Evita <strong>sombras</strong> sobre los productos</li>
+      <li>📐 Mantén la cámara <strong>paralela</strong> a la estantería</li>
+    </ul>
+
+    <div class="catalog-link">
+      <p>¿Faltan productos?</p>
+      <button class="btn-outline" (click)="selectedTab = 'catalog'">📚 Ir al Catálogo de Referencias</button>
+    </div>
+  </div>
+</div>
+
+<div class="catalog-container" *ngIf="selectedTab === 'catalog'">
+  <div class="catalog-header">
+    <h3>📚 Catálogo de Imágenes de Referencia</h3>
+    <p class="hint">Sube una foto de cada producto para mejorar la precisión del reconocimiento</p>
+  </div>
+
+  <div class="catalog-filters">
+    <select class="form-input" [(ngModel)]="selectedCategory">
+      <option value="">Todas las categorías</option>
+      <option *ngFor="let c of categories" [value]="c.name">{{ c.icon }} {{ c.name }}</option>
+    </select>
+    <button class="btn-outline btn-sm" (click)="loadCatalogProducts()">🔄 Actualizar</button>
+  </div>
+
+  <div class="products-grid">
+    <div class="product-card neon-card" *ngFor="let p of allProducts">
+      <div class="product-info">
+        <strong>{{ p.name }}</strong>
+        <small>{{ p.barcode }}</small>
+        <span class="badge" [class.badge-green]="p.stock > 0" [class.badge-red]="p.stock === 0">
+          Stock: {{ p.stock }}
+        </span>
+      </div>
+      <div class="product-reference">
+        <div class="reference-placeholder" *ngIf="!referenceImages.get(p._id)">
+          <span>📷</span>
+          <small>Sin referencia</small>
+        </div>
+        <img [src]="referenceImages.get(p._id)" *ngIf="referenceImages.get(p._id)" alt="Referencia">
+      </div>
+      <button class="btn-outline btn-sm" (click)="openReferenceModal(p)">
+        {{ referenceImages.get(p._id) ? '✏️ Cambiar' : '➕ Agregar' }} Referencia
+      </button>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="allProducts.length === 0">
+    <span class="empty-icon">📦</span>
+    <p>No hay productos registrados</p>
+    <small>Crea productos en el módulo de Inventario para agregar referencias visuales</small>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="showReferenceModal" (click)="closeReferenceModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h2 class="modal-title">📷 Imagen de Referencia</h2>
+    <p class="product-name-modal">{{ referenceProduct?.name }}</p>
+
+    <div class="reference-upload">
+      <div class="upload-area" (click)="refFileInput.click()" *ngIf="!referenceImageBase64">
+        <div class="upload-icon">📷</div>
+        <p>Foto del producto (empaque)</p>
+        <small>Esta imagen ayuda al sistema a reconocer el producto</small>
+      </div>
+
+      <div class="image-preview small" *ngIf="referenceImageBase64">
+        <img [src]="referenceImageBase64" alt="Referencia">
+        <button class="btn-clear small" (click)="referenceImageBase64 = null">✕</button>
+      </div>
+
+      <input #refFileInput type="file" accept="image/*" (change)="onReferenceFileSelected($event)" style="display:none">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-outline" (click)="closeReferenceModal()">Cancelar</button>
+      <button class="btn-primary" (click)="closeReferenceModal()" [disabled]="!referenceImageBase64">
+        ✅ Guardar Referencia
+      </button>
+    </div>
+  </div>
+</div>

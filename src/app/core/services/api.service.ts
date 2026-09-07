@@ -438,5 +438,31 @@ export class ApiService {
       tap(() => this.preload.invalidatePrefix('alerts'))
     );
   }
+
+  // ── Scanner / Vision Computacional ───────────────────────────────────────
+
+  getScannerStatus(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/scanner/status`);
+  }
+
+  getScannerInventoryAssets(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/scanner/inventory`);
+  }
+
+  startScanner(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/scanner/start`, {});
+  }
+
+  stopScanner(): Observable<any> {
+    return this.http.post(`${this.baseUrl}/scanner/stop`, {});
+  }
+
+  scanImage(imageBase64: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/scanner/scan`, { image: imageBase64 });
+  }
+
+  scanAndUpdateInventory(imageBase64: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/scanner/scan-update`, { image: imageBase64, update_stock: true });
+  }
 }
 
