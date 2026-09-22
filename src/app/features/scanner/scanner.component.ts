@@ -24,6 +24,8 @@ export class ScannerComponent implements OnInit {
   showReferenceModal = false;
   referenceProduct: any = null;
   referenceImageBase64: string | null = null;
+  referenceFile: File | null = null;
+  savingReference = false;
 
   constructor(public authService: AuthService, private api: ApiService) {}
 
@@ -92,6 +94,11 @@ export class ScannerComponent implements OnInit {
       return;
     }
 
+    if (file.size > 10 * 1024 * 1024) {
+      Swal.fire('⚠️', 'La imagen supera los 10MB permitidos', 'warning');
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       this.uploadedImage = reader.result as string;
@@ -125,6 +132,12 @@ export class ScannerComponent implements OnInit {
         if (!res.success) {
           Swal.fire('⚠️', res.message || res.error || 'Error en el escaneo', 'warning');
           return;
+        }
+
+        if (res.fallback) {
+          Swal.fire('⚠️ Modelo genérico', 'No hay modelo entrenado (best.pt). El conteo usa COCO genérico y NO es válido para inventario. Entrena el modelo antes de actualizar stock.', 'warning');
+        } else if (res.filtered_low_conf > 0) {
+          Swal.fire({ icon: 'info', title: 'Filtro de confianza', text: `Se descartaron ${res.filtered_low_conf} detecciones bajo el umbral (${Math.round((res.conf_threshold || 0.5) * 100)}%).` });
         }
       },
       error: (err) => {
@@ -168,9 +181,15 @@ export class ScannerComponent implements OnInit {
   }
 
   applyStockUpdate(): void {
+    if (this.scanResults?.fallback) {
+      Swal.fire('⛔', 'No se puede actualizar stock con el modelo genérico. Entrena best.pt primero.', 'error');
+      return;
+    }
     const imageData = this.uploadedImage!.split(',')[1];
+    // Reutiliza la inferencia confirmada: evita pagar una segunda detección
+    const confirmed = (this.scanResults.products || []).map((p: any) => ({ name: p.name, count: p.count, confidence: p.confidence }));
 
-    this.api.scanAndUpdateInventory(imageData).subscribe({
+    this.api.scanAndUpdateInventory(imageData, confirmed).subscribe({
       next: (res: any) => {
         this.scanResults = res;
 
@@ -205,7 +224,8 @@ export class ScannerComponent implements OnInit {
 
   openReferenceModal(product: any): void {
     this.referenceProduct = product;
-    this.referenceImageBase64 = this.referenceImages.get(product._id) || null;
+    this.referenceImageBase64 = this.referenceImages.get(product._id) || product.imageUrl || null;
+    this.referenceFile = null;
     this.showReferenceModal = true;
   }
 
@@ -213,6 +233,15 @@ export class ScannerComponent implements OnInit {
     const file = event.target.files[0];
     if (!file) return;
 
+    if (!file.type.startsWith('image/')) {
+      Swal.fire('⚠️', 'Selecciona una imagen válida', 'warning');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      Swal.fire('⚠️', 'La imagen supera los 10MB', 'warning');
+      return;
+    }
+    this.referenceFile = file;
     const reader = new FileReader();
     reader.onload = () => {
       this.referenceImageBase64 = reader.result as string;
@@ -220,10 +249,34 @@ export class ScannerComponent implements OnInit {
     reader.readAsDataURL(file);
   }
 
+  saveReference(): void {
+    if (!this.referenceProduct || (!this.referenceFile && !this.referenceImageBase64)) return;
+    if (!this.referenceFile) {
+      // Solo había preview previa: nada que subir
+      this.closeReferenceModal();
+      return;
+    }
+    this.savingReference = true;
+    this.api.uploadScannerReference(this.referenceProduct._id, this.referenceFile).subscribe({
+      next: (res: any) => {
+        this.savingReference = false;
+        this.referenceImages.set(this.referenceProduct._id, this.referenceImageBase64!);
+        if (res?.imageUrl) this.referenceProduct.imageUrl = res.imageUrl;
+        this.closeReferenceModal();
+        Swal.fire('✅', 'Imagen de referencia guardada en el servidor', 'success');
+      },
+      error: (err) => {
+        this.savingReference = false;
+        Swal.fire('❌', err.error?.message || err.error?.error || 'Error al subir referencia', 'error');
+      }
+    });
+  }
+
   closeReferenceModal(): void {
     this.showReferenceModal = false;
     this.referenceProduct = null;
     this.referenceImageBase64 = null;
+    this.referenceFile = null;
   }
 
   getProductByName(name: string): any {

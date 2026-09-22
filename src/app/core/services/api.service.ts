@@ -461,8 +461,15 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/scanner/scan`, { image: imageBase64 });
   }
 
-  scanAndUpdateInventory(imageBase64: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/scanner/scan-update`, { image: imageBase64, update_stock: true });
+  scanAndUpdateInventory(imageBase64: string, products?: any[]): Observable<any> {
+    // Si se envían products confirmados se reutiliza la inferencia (sin re-escanear)
+    return this.http.post(`${this.baseUrl}/scanner/scan-update`, { image: imageBase64, products, update_stock: true });
+  }
+
+  uploadScannerReference(productId: string, file: File): Observable<any> {
+    const form = new FormData();
+    form.append('image', file);
+    return this.http.post(`${this.baseUrl}/scanner/reference/${productId}`, form);
   }
 }
 

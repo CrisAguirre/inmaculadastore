@@ -211,8 +211,8 @@
 
     <div class="modal-actions">
       <button class="btn-outline" (click)="closeReferenceModal()">Cancelar</button>
-      <button class="btn-primary" (click)="closeReferenceModal()" [disabled]="!referenceImageBase64">
-        ✅ Guardar Referencia
+      <button class="btn-primary" (click)="saveReference()" [disabled]="!referenceImageBase64 || savingReference">
+        {{ savingReference ? '⏳ Subiendo...' : '✅ Guardar Referencia' }}
       </button>
     </div>
   </div>
