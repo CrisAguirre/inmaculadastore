@@ -25,9 +25,13 @@ listore/
   stock, minStock, imageUrl, description. Índices texto + isActive.
 - Deploy: frontend Vercel (`vercel.json`), backend Railway (`railway.json`).
 
-## 3. Módulo Scanner / Contador de existencias (estado tras refactor 2026-09-22)
-Flujo: subir foto estantería → inferencia YOLO (`scanner/api.py`) → conteos →
-confirmación → actualización de stock con auditoría.
+## 3. Módulo Scanner / Contador de existencias (estado 2026-10-05: conteo total real)
+Flujo YOLO clásico: subir foto → inferencia (`scanner/api.py`) → confirmación →
+actualización con auditoría. **Nuevo**: motor automático sin `best.pt`
+(`scanner/auto_count.py`: YOLO-World retail + corroboración COCO, tiers
+ALTA/MEDIA/BAJA) + sesiones multifoto por zona + **conteo total real 2.373 uds**
+(`scanner/conteo_total_final.json/.csv`). Criterio vigente: la foto manda, el
+sistema anterior era supuesto (`aplicar_conteo.js --apply` reemplaza stock).
 
 ### 3.1 Diagnóstico previo (sincero)
 No cumplía a cabalidad: fallback silencioso a COCO genérico, sin umbral de confianza,
@@ -79,19 +83,29 @@ clasificación CLIP/embedding contra catálogo; conteo por similitud.
 | POST | `/api/scanner/stop` | admin |
 | POST | `/api/scanner/scan` `{image}` | Sí |
 | POST | `/api/scanner/scan-update` `{image?, products?, update_stock}` | admin/operador |
+| POST | `/api/scanner/scan-auto` `{image|image_path, annotate?}` | Sí |
+| POST | `/api/scanner/zone-session` `{photos[≤10], zone?}` | Sí |
+| GET | `/api/scanner/zones-report` | Sí |
 | POST | `/api/scanner/reference/:productId` form `image` | admin/operador |
+
+> Regla de zona: fotos con igual número base (1+1b, 40+40a+40b) son la misma
+> zona; el detalle reemplaza su porción (no duplicar traslape) y el resto se suma.
+> `zone-session` NO pisa `Product.stock` sin mapeo SKU confirmado.
 
 ## 5. Cómo correr
 - Backend: `cd libkn && npm run dev` (levanta Flask automáticamente).
+- Conteo auto 1 foto: `POST /api/scanner/scan-auto`. Sesión zona: `POST /api/scanner/zone-session`.
+- Batch 53 fotos: `python scanner/batch_all.py` (usa `src/stock/`); reporte en `scanner/reporte_conteo.md`.
+- Aplicar conteo como stock real: `node src/utils/aplicar_conteo.js --dry-run` y luego `--apply` (requiere `MONGODB_URI`).
 - Entrenamiento clásico (solo si se retoma): `cd scanner && python train.py 50`
   → copiar `weights/train/weights/best.pt` a `weights/best.pt`.
-- Vars Python: `SCANNER_CONF_THRESHOLD`, `SCANNER_ALLOW_COCO_FALLBACK`.
+- Vars Python: `SCANNER_CONF_THRESHOLD`, `SCANNER_ALLOW_COCO_FALLBACK`,
+  `SCANNER_AUTO_CONF_WORLD` (0.15), `SCANNER_AUTO_CONF_COCO` (0.25).
 
 ## 6. Pendientes
 - [x] Fotos recibidas: 53 en `libkn/src/stock/` (40 zonas; pares `1/1b`, `40/40a/40b` son planos complementarios y SE SUMAN). Batch 2026-10-05: auto=1108 uds, COCO=639. Ver `libkn/scanner/reporte_conteo.md` + `batch_result.json`.
 - [x] CONTEO TOTAL REAL 2026-10-05: `libkn/scanner/conteo_total_final.json` + `.csv` — 40 zonas, 156 líneas, **2.373 uds**. Criterio: la foto manda (sistema anterior era supuesto). Zonas ALTA/MEDIA por IA, 17 zonas BAJA por conteo humano visual. `src/utils/aplicar_conteo.js --apply` reemplaza stock + audita (requiere MONGODB_URI; zonas AUTO esperan mapeo SKU).
-- [ ] Zonas ALTA (licores/vitrinas: 25, 34, 4, 40, 14): aplicar conteo auto con validación visual.
-- [ ] Zonas BAJA (abarrotes a granel: 2, 5, 8, 9, 15, 21, 26-28, 31, 37-39): conteo manual filas×columnas con foto como evidencia (la instancia no segmenta apilados).
+- [x] Zonas ALTA contadas por IA (25, 34, 4, 40, 14, etc.) + 17 zonas BAJA por conteo humano visual — ver `conteo_total_final.json`. Falta: aplicar a BD (`aplicar_conteo.js --apply`, requiere `MONGODB_URI`) y verificación en sitio de traslapes 27/28 y 38/39.
 - [ ] Poblar/validar `Product.imageUrl` para todo el catálogo.
-- [ ] Tabla mapeo `clase → productId` (SKU) si se vuelve a YOLO entrenado; el `zone-session` NO pisa `Product.stock` sin mapeo confirmado.
+- [ ] Tabla mapeo `clase → productId` (SKU) para zonas AUTO; crear en BD las familias sin producto (ver resumen de `aplicar_conteo.js --dry-run`).
 - [ ] Tests del matching + auditoría `StockCount` en reportes.
