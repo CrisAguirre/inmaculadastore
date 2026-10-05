@@ -89,7 +89,7 @@ clasificación CLIP/embedding contra catálogo; conteo por similitud.
 
 ## 6. Pendientes
 - [x] Fotos recibidas: 53 en `libkn/src/stock/` (40 zonas; pares `1/1b`, `40/40a/40b` son planos complementarios y SE SUMAN). Batch 2026-10-05: auto=1108 uds, COCO=639. Ver `libkn/scanner/reporte_conteo.md` + `batch_result.json`.
-- [x] Motor auto sin `best.pt`: `scanner/auto_count.py` (YOLO-World retail + COCO). Endpoints `POST /scan-auto`, `POST /zone-session` (multifoto x zona, máx 10), `GET /zones-report`. Tab frontend `Zonas`.
+- [x] CONTEO TOTAL REAL 2026-10-05: `libkn/scanner/conteo_total_final.json` + `.csv` — 40 zonas, 156 líneas, **2.373 uds**. Criterio: la foto manda (sistema anterior era supuesto). Zonas ALTA/MEDIA por IA, 17 zonas BAJA por conteo humano visual. `src/utils/aplicar_conteo.js --apply` reemplaza stock + audita (requiere MONGODB_URI; zonas AUTO esperan mapeo SKU).
 - [ ] Zonas ALTA (licores/vitrinas: 25, 34, 4, 40, 14): aplicar conteo auto con validación visual.
 - [ ] Zonas BAJA (abarrotes a granel: 2, 5, 8, 9, 15, 21, 26-28, 31, 37-39): conteo manual filas×columnas con foto como evidencia (la instancia no segmenta apilados).
 - [ ] Poblar/validar `Product.imageUrl` para todo el catálogo.
