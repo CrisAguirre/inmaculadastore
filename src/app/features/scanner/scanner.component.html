@@ -9,6 +9,7 @@
       {{ scannerRunning ? '⏹️ Detener' : '▶️ Iniciar' }}
     </button>
     <button class="tab-btn" [class.active]="selectedTab === 'scan'" (click)="selectedTab = 'scan'">📷 Escanear</button>
+    <button class="tab-btn" [class.active]="selectedTab === 'zones'" (click)="selectedTab = 'zones'">🗺️ Zonas</button>
     <button class="tab-btn" [class.active]="selectedTab === 'catalog'" (click)="selectedTab = 'catalog'">📚 Catálogo</button>
   </div>
 </div>
@@ -143,6 +144,70 @@
       <p>¿Faltan productos?</p>
       <button class="btn-outline" (click)="selectedTab = 'catalog'">📚 Ir al Catálogo de Referencias</button>
     </div>
+  </div>
+</div>
+
+<div class="catalog-container" *ngIf="selectedTab === 'zones'">
+  <div class="catalog-header">
+    <h3>🗺️ Conteo por zona (multifoto)</h3>
+    <p class="hint">Fotos con igual número base son planos complementarios y <strong>se suman</strong> (ej: 1 + 1b → zona 1 · 40 + 40a + 40b → zona 40). Motor automático YOLO-World, sin best.pt.</p>
+  </div>
+
+  <div class="neon-card" style="padding:1rem; margin-bottom:1rem;">
+    <h4>📸 Sesión de zona</h4>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+      <input class="form-input" [(ngModel)]="zoneName" placeholder="Zona (ej: 25)" style="max-width:140px;">
+      <input #zoneInput type="file" accept="image/*" multiple (change)="onZoneFilesSelected($event)" style="display:none">
+      <button class="btn-outline btn-sm" (click)="zoneInput.click()">➕ Fotos (máx 10)</button>
+      <button class="btn-primary btn-sm" (click)="runZoneSession()" [disabled]="!zoneFiles.length || isZoneCounting">
+        {{ isZoneCounting ? '⏳ Contando...' : '▶️ Contar zona' }}
+      </button>
+    </div>
+    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+      <img *ngFor="let p of zonePreviews" [src]="p" alt="zona" style="width:120px; height:90px; object-fit:cover; border-radius:8px;">
+    </div>
+    <div *ngIf="zoneResult?.success" style="margin-top:1rem;">
+      <h4>Zona {{ zoneResult.zone || zoneName || '(s/n)' }} → <strong>{{ zoneResult.merged_total }}</strong> unidades
+        <span class="badge" [class.badge-green]="!zoneResult.needs_manual_rows" [class.badge-orange]="zoneResult.needs_manual_rows">
+          {{ zoneResult.needs_manual_rows ? '⚠️ BAJA: validar por filas' : '✅ AUTO OK' }}
+        </span>
+      </h4>
+      <table class="results-table">
+        <thead><tr><th>Clase</th><th>Zona (suma)</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let m of zoneResult.merged_products"><td>{{ m.name }}</td><td><span class="count-badge">{{ m.count }}</span></td></tr>
+        </tbody>
+      </table>
+      <h4 style="margin-top:1rem;">Detalle por foto</h4>
+      <table class="results-table">
+        <thead><tr><th>Foto</th><th>Unidades</th><th>Fiabilidad</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let f of zoneResult.per_photo">
+            <td>{{ f.file }}</td>
+            <td>{{ f.success ? f.total_units : 'error' }}</td>
+            <td>{{ f.reliability || f.error || '-' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="neon-card" style="padding:1rem;">
+    <h4>📊 Reporte batch 53 fotos / 40 zonas
+      <button class="btn-outline btn-sm" (click)="loadZonesReport()" [disabled]="isLoadingZones">{{ isLoadingZones ? '⏳...' : '🔄 Cargar' }}</button>
+    </h4>
+    <p class="hint" *ngIf="!zonesReport">Generado por el batch sobre <code>libkn/src/stock</code> (1.108 unidades auto, 639 corroboración COCO).</p>
+    <table class="results-table" *ngIf="zonesReport?.zones">
+      <thead><tr><th>Zona</th><th>Fotos</th><th>Auto (suma)</th><th>COCO</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let z of zonesReport.zones | keyvalue">
+          <td><strong>{{ z.key }}</strong></td>
+          <td><small>{{ z.value.files.join(', ') }}</small></td>
+          <td><span class="count-badge">{{ z.value.world_zona }}</span></td>
+          <td>{{ z.value.coco_zona }}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 

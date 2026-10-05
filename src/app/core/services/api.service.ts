@@ -466,6 +466,20 @@ export class ApiService {
     return this.http.post(`${this.baseUrl}/scanner/scan-update`, { image: imageBase64, products, update_stock: true });
   }
 
+  scanAuto(imageBase64: string, annotate = false): Observable<any> {
+    // Conteo automatico sin best.pt (YOLO-World retail + corroboracion COCO)
+    return this.http.post(`${this.baseUrl}/scanner/scan-auto`, { image: imageBase64, annotate });
+  }
+
+  scanZoneSession(photos: string[], zone?: string): Observable<any> {
+    // Sesion multifoto por zona: los planos complementarios (1 + 1b) SE SUMAN
+    return this.http.post(`${this.baseUrl}/scanner/zone-session`, { photos, zone });
+  }
+
+  getZonesReport(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/scanner/zones-report`);
+  }
+
   uploadScannerReference(productId: string, file: File): Observable<any> {
     const form = new FormData();
     form.append('image', file);

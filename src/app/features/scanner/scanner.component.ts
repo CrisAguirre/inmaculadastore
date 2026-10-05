@@ -11,7 +11,7 @@ import Swal from 'sweetalert2';
 export class ScannerComponent implements OnInit {
   scannerRunning = false;
   scannerUrl = '';
-  selectedTab: 'scan' | 'catalog' = 'scan';
+  selectedTab: 'scan' | 'catalog' | 'zones' = 'scan';
   isScanning = false;
   scanResults: any = null;
   uploadedImage: string | null = null;
@@ -300,6 +300,84 @@ export class ScannerComponent implements OnInit {
   getFilteredCatalogProducts(): any[] {
     if (!this.selectedCategory) return this.catalogProducts;
     return this.catalogProducts.filter(c => c.name === this.selectedCategory);
+  }
+
+  // ── Conteo automatico por zona (multifoto, planos complementarios se suman) ──
+  zoneName = '';
+  zoneFiles: File[] = [];
+  zonePreviews: string[] = [];
+  zoneResult: any = null;
+  zonesReport: any = null;
+  isZoneCounting = false;
+  isLoadingZones = false;
+
+  onZoneFilesSelected(event: any): void {
+    const files: File[] = Array.from(event.target.files || []);
+    if (!files.length) return;
+    if (files.length > 10) {
+      Swal.fire('⚠️', 'Máximo 10 fotos por sesión de zona', 'warning');
+      return;
+    }
+    for (const f of files) {
+      if (!f.type.startsWith('image/') || f.size > 10 * 1024 * 1024) {
+        Swal.fire('⚠️', `Archivo no válido (>10MB o no imagen): ${f.name}`, 'warning');
+        return;
+      }
+    }
+    this.zoneFiles = files;
+    this.zonePreviews = [];
+    this.zoneResult = null;
+    files.forEach(f => {
+      const reader = new FileReader();
+      reader.onload = () => this.zonePreviews.push(reader.result as string);
+      reader.readAsDataURL(f);
+    });
+  }
+
+  runZoneSession(): void {
+    if (!this.zoneFiles.length) {
+      Swal.fire('⚠️', 'Selecciona 1 a 10 fotos de la zona (ej: 1.jpg + 1b.jpg)', 'warning');
+      return;
+    }
+    this.isZoneCounting = true;
+    const base64List: string[] = [];
+    let pending = this.zoneFiles.length;
+    this.zoneFiles.forEach(f => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        base64List.push((reader.result as string).split(',')[1]);
+        if (--pending === 0) {
+          this.api.scanZoneSession(base64List, this.zoneName || undefined).subscribe({
+            next: (res: any) => {
+              this.isZoneCounting = false;
+              this.zoneResult = res;
+              if (res?.needs_manual_rows) {
+                Swal.fire('⚠️ Zona con fiabilidad baja', 'Abarrotes a granel: valida con conteo manual por filas (filas × columnas) usando las fotos como evidencia.', 'warning');
+              }
+            },
+            error: (err) => {
+              this.isZoneCounting = false;
+              Swal.fire('❌', err.error?.error || err.error?.message || 'Error en sesión de zona', 'error');
+            }
+          });
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+  }
+
+  loadZonesReport(): void {
+    this.isLoadingZones = true;
+    this.api.getZonesReport().subscribe({
+      next: (res: any) => {
+        this.isLoadingZones = false;
+        this.zonesReport = res;
+      },
+      error: (err) => {
+        this.isLoadingZones = false;
+        Swal.fire('❌', err.error?.error || 'Sin reporte batch todavía', 'error');
+      }
+    });
   }
 
   formatConfidence(value: number): string {
