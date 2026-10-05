@@ -116,27 +116,34 @@ contaron (3.441 uds) y eliminaron del repo; no pedir más fotos por ahora.
 - Vars Python: `SCANNER_CONF_THRESHOLD`, `SCANNER_ALLOW_COCO_FALLBACK`,
   `SCANNER_AUTO_CONF_WORLD` (0.15), `SCANNER_AUTO_CONF_COCO` (0.25).
 
-## 6. Estado y pendientes (2026-10-05)
+## 6. Estado y pendientes (2026-10-05, cierre de sesión)
 - [x] 53 fotos (40 zonas, 4000×2250) → batch IA (auto 1.108 + COCO 639) → corrección
   humana foto×foto → **v2: 3.441 uds, 312 líneas** (`conteo_total_final.json/.csv`).
   La IA subcontaba ~2/3 en abarrotes/dulces/papel (zona 10: IA 62 → real ~210).
 - [x] Regla de zona: el detalle reemplaza su porción (no duplicar); resto se suma.
   Fusión 27-28 (misma vitrina, lados opuestos): 114+67 → **128**. 38/39 se suman.
   Traslapes por verificar en sitio: 11/12b, 27/28, 38/39; pilones 26/27/28 = estimación.
-- [x] BD real `listore`: 734 productos (levantamiento del dueño, stock supuesto 24),
-  18 categorías, 51 proveedores, 10 ventas de PRUEBA (ignorar).
-  Seed aplicado: lote 1 (15 SKU/127 uds) + lote 2 (5 SKU/46 uds) = **20 SKU con stock
-  real, 20 auditorías `StockCount`**. Commits `ee9ed9c` + lote2 (locales, sin push).
-- [ ] Lote 3+: ~3.270 uds pendientes = grupos multimarca (ej "Cajetillas"=65),
-  multi-talla (Azúcar 8 SKUs, Fruco 12 sobres, Isabel aceite/agua) y ~80 marcas sin
-  SKU en BD (Bary, Noel, Trident, Savital, Colgate, Fab, Winny, Bucanero, Yupi,
-  Rexona, Gillette, Dove, Pantene, Nutribela, Fabuloso, huevo, Bimbo, pilas...).
-  Falsos positivos ya rechazados: Todito≠DeTodito, Gala≠tajada, Panela≠Panelada,
-  Aloha≠vaso, Choco Listo≠paleta, Todito/Chao/Jet multimarca→1 SKU.
-- [ ] Crear SKUs faltantes con precios reales y desgloses por tanda para lote 3+.
+- [x] BD real `listore` (Cluster0): 734 productos (levantamiento del dueño, stock supuesto
+  24), 18 categorías, 51 proveedores, 10 ventas de PRUEBA (ignorar).
+  Seed aplicado y VERIFICADO visible en app: lote 1 (15 SKU/127 uds) + lote 2
+  (5 SKU/46 uds) = **20 SKU con stock real, 20 auditorías `StockCount`**.
+  Incidente "no se ven": era caché — la app persiste `all-products` en localStorage
+  (TTL 5 min); tras seed directo a BD hay que reloguear para disparar el preload.
+  Frontend (dev y prod) apunta a `https://libkn.onrender.com/api` — confirmar que ese
+  servicio use la misma cadena (mismo cluster + BD `listore`).
+- [x] Commits backend locales (sin push): `ee9ed9c` (seed + certero) + lote2.
+  Respaldo `respaldo_products_734.json` en Escritorio del PC tienda.
+- [ ] Lote 3+ (~3.270 uds): grupos multimarca ("Cajetillas"=65), multi-talla (Azúcar
+  8 SKUs, Fruco 12 sobres, Isabel aceite/agua) y ~80 marcas sin SKU en BD (Bary,
+  Noel, Trident, Savital, Colgate, Fab, Winny, Bucanero, Yupi, Rexona, Gillette,
+  Dove, Pantene, Nutribela, Fabuloso, huevo, Bimbo, pilas...). Falsos positivos ya
+  rechazados y documentados: Todito≠DeTodito, Gala≠tajada, Panela≠Panelada,
+  Aloha≠vaso, Choco Listo≠paleta, Bianchi barra≠bolsa. Requiere desgloses del dueño
+  o creación de SKUs con precios.
 - [ ] Poblar/validar `Product.imageUrl` para todo el catálogo.
 - [ ] Tests del matching + auditoría `StockCount` en reportes.
-- [ ] Push commits locales (`ee9ed9c`, lote2) a `origin/main` cuando se indique.
+- [ ] Push commits locales a `origin/main` cuando se indique.
+- [ ] Rotar password del usuario Atlas (la cadena se expuso en un chat el 2026-10-05).
 
 ## 7. Lecciones de la sesión (no repetir errores)
 - YOLO-World es fiable solo en botellas/neveras (zona 33: IA 49 ≈ real); en apilados
@@ -147,5 +154,10 @@ contaron (3.441 uds) y eliminaron del repo; no pedir más fotos por ahora.
   antes de reemplazos masivos (respaldo primero).
 - Secretos: `MONGODB_URI` solo vía `.env`/env del backend o Render Shell; si se
   expone en un chat, rotar password en Atlas (Database Access) de inmediato.
+  (2026-10-05: cadena expuesta en chat + usada inline en PowerShell; historial
+  PSReadLine local limpiado; falta confirmar rotación.)
 - `git` en este PC: `listore/` es repo sin commits (no tocar); el backend real es
   `listore/libkn` (remoto `github.com/CrisAguirre/libkn`, rama `main`).
+- Diagnósticos ya resueltos: (1) "no se ven en app" = caché localStorage, reloguear;
+  (2) `$ne` en PowerShell se lo come el shell — usar comillas simples/archivo;
+  (3) `select-string` muestra `�` por tildes/É, verificar bytes reales en BD.
