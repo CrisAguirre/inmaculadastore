@@ -202,9 +202,9 @@
       <tbody>
         <tr *ngFor="let z of zonesReport.zones | keyvalue">
           <td><strong>{{ z.key }}</strong></td>
-          <td><small>{{ z.value.files.join(', ') }}</small></td>
-          <td><span class="count-badge">{{ z.value.world_zona }}</span></td>
-          <td>{{ z.value.coco_zona }}</td>
+          <td><small>{{ $any(z.value).files.join(', ') }}</small></td>
+          <td><span class="count-badge">{{ $any(z.value).world_zona }}</span></td>
+          <td>{{ $any(z.value).coco_zona }}</td>
         </tr>
       </tbody>
     </table>
