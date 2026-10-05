@@ -1,7 +1,7 @@
 # Listore / La Inmaculada — Contexto del Proyecto (AGENTS.md)
 
 > Raíz frontend: `inmaculadastore/` (Angular 16). Backend: `../libkn/` (Express 5 + Mongoose 9).
-> No existía `agents.md` previo: este archivo es la fuente de contexto creada el 2026-09-22.
+> Fuente creada 2026-09-22; **contexto total actualizado 2026-10-05** (sesión conteo total + seed BD real).
 
 ## 1. Qué es
 Sistema comercial "La Inmaculada": POS + inventario + compras/proveedores + caja/cierres +
@@ -17,21 +17,31 @@ listore/
     ├── src/routes/: auth, products, categories, sales, cash-closings, alerts, reports,
     │   storefront, settings, preload, suppliers, purchases, expenses, finance, debtors, scanner
     ├── src/models/: User, Product, Category, Sale, Purchase, Supplier, Expense,
-    │   CashClosing, Debtor, Alert, Settings, StockCount (nuevo, auditoría de conteos)
-    └── scanner/: api.py (Flask YOLO), train.py, scan.py, dataset/data.yaml, assets/inventario/
+    │   CashClosing, Debtor, Alert, Settings, StockCount (auditoría de conteos)
+    ├── src/utils/: seedAdmin, seedClient, seedOperador, seedInventario(×2, demo),
+    │   **seedCantidades.js** (cantidades reales: MAPEO + REPARTO_ZONAS_AUTO + SEED_FILE,
+    │   dry-run/`--apply`, audita StockCount), **backupProducts.js** (respaldo JSON)
+    └── scanner/: api.py (Flask YOLO + `/scan-auto` + `/zones-report`), auto_count.py
+        (YOLO-World retail + COCO, tiers ALTA/MEDIA/BAJA), train.py, scan.py,
+        dataset/data.yaml, batch_result.json, reporte_conteo.md,
+        conteo_total_final.json/.csv (v2 corregido), conteo_certero.json,
+        conteo_lote2.json, batch_annotated/ (evidencia). OJO: `src/stock/` (53 fotos)
+        se eliminó del repo y del disco el 2026-10-05 (commit `b9d8203`, pesaba ~200MB);
+        el conteo vive en los JSON/CSV. `scanner/weights/`, `*.pt` ignorados en git.
 ```
 - Roles `User`: `admin, cajero, cliente, invitado, operador` (default `cajero`).
 - `Product`: name, barcode (unique sparse), category*, supplier, purchasePrice, salePrice,
   stock, minStock, imageUrl, description. Índices texto + isActive.
 - Deploy: frontend Vercel (`vercel.json`), backend Railway (`railway.json`).
 
-## 3. Módulo Scanner / Contador de existencias (estado 2026-10-05: conteo total real)
+## 3. Módulo Scanner / Contador de existencias (estado 2026-10-05: conteo total + seed real)
 Flujo YOLO clásico: subir foto → inferencia (`scanner/api.py`) → confirmación →
-actualización con auditoría. **Nuevo**: motor automático sin `best.pt`
+actualización con auditoría. **Motor automático sin `best.pt`**
 (`scanner/auto_count.py`: YOLO-World retail + corroboración COCO, tiers
-ALTA/MEDIA/BAJA) + sesiones multifoto por zona + **conteo total real 2.373 uds**
-(`scanner/conteo_total_final.json/.csv`). Criterio vigente: la foto manda, el
-sistema anterior era supuesto (`aplicar_conteo.js --apply` reemplaza stock).
+ALTA/MEDIA/BAJA) + sesiones multifoto por zona + tab frontend `Zonas` +
+**conteo total corregido v2: 3.441 uds** (`scanner/conteo_total_final.json/.csv`,
+312 líneas) + **seed de cantidades contra BD real** (`src/utils/seedCantidades.js`).
+Criterio vigente: la foto manda, el sistema anterior era supuesto.
 
 ### 3.1 Diagnóstico previo (sincero)
 No cumplía a cabalidad: fallback silencioso a COCO genérico, sin umbral de confianza,
@@ -64,15 +74,11 @@ sin validación de 10MB ni auditoría.
 - **`.env.example`**: nuevas vars `SCANNER_PORT, SCANNER_URL, SCANNER_TIMEOUT_MS,
   SCANNER_CONF_THRESHOLD, SCANNER_ALLOW_COCO_FALLBACK`.
 
-### 3.3 Decisión de producto (2026-09-22)
-Descartado exigir 50 fotos/producto (inviable, devuelve al conteo manual).
-**Nuevo enfoque**: catálogo por similitud — 1 foto limpia por producto (nombres ya
-normalizados + `imageUrl` actual) como plantilla; detección genérica de unidades +
-clasificación CLIP/embedding contra catálogo; conteo por similitud.
-- Mañana: el usuario toma **1 foto frontal por estantería** (paralela, ~1.5m, alta
-  resolución, buena luz, traslape 20%, anotar pasillo/categoría).
-- Siguiente paso: montar embeddings del catálogo, correr detección sobre esas fotos,
-  medir precisión por producto; solo los que fallen pedirán 3–5 fotos extra.
+### 3.3 Decisión de producto (2026-09-22, SUPERADA el 2026-10-05)
+La idea inicial era catálogo por similitud (1 foto/producto + CLIP/embedding).
+Se reemplazó por: YOLO-World open-vocabulary sin `best.pt` + conteo humano visual
+donde la IA no segmenta + seed de cantidades a BD. Las 53 fotos ya se tomaron,
+contaron (3.441 uds) y eliminaron del repo; no pedir más fotos por ahora.
 
 ## 4. Endpoints scanner
 | Método | Ruta | Auth |
@@ -93,23 +99,53 @@ clasificación CLIP/embedding contra catálogo; conteo por similitud.
 > `zone-session` NO pisa `Product.stock` sin mapeo SKU confirmado.
 
 ## 5. Cómo correr
-- Backend: `cd libkn && npm run dev` (levanta Flask automáticamente).
+- Backend: `cd libkn && npm install && npm run dev` (levanta Flask automáticamente).
 - Conteo auto 1 foto: `POST /api/scanner/scan-auto`. Sesión zona: `POST /api/scanner/zone-session`.
-- Batch 53 fotos: `python scanner/batch_all.py` (usa `src/stock/`); reporte en `scanner/reporte_conteo.md`.
+- Batch 53 fotos: `python scanner/batch_all.py` — REQUIERE `src/stock/` (eliminado del
+  repo 2026-10-05; solo re-ejecutable si se restauran las fotos). Reporte en
+  `scanner/reporte_conteo.md`.
+- Respaldo: `node src/utils/backupProducts.js` → `scanner/respaldo_products_<fecha>.json`
+  (copia de 734 productos también en Escritorio del PC tienda).
 - Seed cantidades reales: `node src/utils/seedCantidades.js` (dry-run) y con `--apply`
-  reemplaza stock + audita (usa el `.env` del backend con `MONGODB_URI`; empareja por
-  MAPEO > exacto > barcode > difuso; zonas AUTO 25/33/34/36 y fusión 27-28 van por
-  `REPARTO_ZONAS_AUTO`).
+  reemplaza stock + audita. `SEED_FILE` para lotes parciales (`conteo_certero.json`,
+  `conteo_lote2.json`). Empareja MAPEO > exacto > barcode > difuso; zonas AUTO
+  25/33/34/36 y fusión 27-28 van por `REPARTO_ZONAS_AUTO`. Requiere `MONGODB_URI`
+  (solo en backend con `.env`; NUNCA commitear ni pegar en chats sin rotar después).
 - Entrenamiento clásico (solo si se retoma): `cd scanner && python train.py 50`
   → copiar `weights/train/weights/best.pt` a `weights/best.pt`.
 - Vars Python: `SCANNER_CONF_THRESHOLD`, `SCANNER_ALLOW_COCO_FALLBACK`,
   `SCANNER_AUTO_CONF_WORLD` (0.15), `SCANNER_AUTO_CONF_COCO` (0.25).
 
-## 6. Pendientes
-- [x] Fotos recibidas: 53 en `libkn/src/stock/` (40 zonas; pares `1/1b`, `40/40a/40b` son planos complementarios y SE SUMAN). Batch 2026-10-05: auto=1108 uds, COCO=639. Ver `libkn/scanner/reporte_conteo.md` + `batch_result.json`.
-- [x] CONTEO TOTAL CORREGIDO v2 2026-10-05: `libkn/scanner/conteo_total_final.json` + `.csv` — 40 zonas, 312 líneas, **3.441 uds** (las 53 fotos vistas 1×1; la IA subcontaba ~1/3 en abarrotes/dulces/papel). Criterio: la foto manda. Fusión 27-28 (misma vitrina, 128, no sumar); 38/39 se suman. Seed listo: `src/utils/seedCantidades.js` (corre en backend, sin compartir URI).
-- [x] Zonas ALTA por IA + 36 zonas resto por conteo humano visual con familias. Zonas AUTO 25/33/34/36 y fusión 27-28 pendientes de MAPEO a SKU en el seed.
-- [x] Seed corriendo con BD real 2026-10-05: respaldo `respaldo_products_734.json` (734 productos, en Escritorio). Lote 1 (15 SKU/127 uds) + lote 2 (5 SKU/46 uds) aplicados y verificados: 20 SKU con stock real, 20 auditorías `StockCount`. Commits `ee9ed9c` + lote2 (seed + `conteo_certero.json`/`conteo_lote2.json` + `SEED_FILE`, MAPEO de 20 pares). Resto (~3.270 uds) pendiente: grupos multimarca, multi-SKU por talla y ~80 marcas sin SKU en BD (Bary, Noel, Trident, Savital, Colgate, Fab, Winny, Bucanero, Yupi, Rexona, pilas, huevo, Bimbo...).
+## 6. Estado y pendientes (2026-10-05)
+- [x] 53 fotos (40 zonas, 4000×2250) → batch IA (auto 1.108 + COCO 639) → corrección
+  humana foto×foto → **v2: 3.441 uds, 312 líneas** (`conteo_total_final.json/.csv`).
+  La IA subcontaba ~2/3 en abarrotes/dulces/papel (zona 10: IA 62 → real ~210).
+- [x] Regla de zona: el detalle reemplaza su porción (no duplicar); resto se suma.
+  Fusión 27-28 (misma vitrina, lados opuestos): 114+67 → **128**. 38/39 se suman.
+  Traslapes por verificar en sitio: 11/12b, 27/28, 38/39; pilones 26/27/28 = estimación.
+- [x] BD real `listore`: 734 productos (levantamiento del dueño, stock supuesto 24),
+  18 categorías, 51 proveedores, 10 ventas de PRUEBA (ignorar).
+  Seed aplicado: lote 1 (15 SKU/127 uds) + lote 2 (5 SKU/46 uds) = **20 SKU con stock
+  real, 20 auditorías `StockCount`**. Commits `ee9ed9c` + lote2 (locales, sin push).
+- [ ] Lote 3+: ~3.270 uds pendientes = grupos multimarca (ej "Cajetillas"=65),
+  multi-talla (Azúcar 8 SKUs, Fruco 12 sobres, Isabel aceite/agua) y ~80 marcas sin
+  SKU en BD (Bary, Noel, Trident, Savital, Colgate, Fab, Winny, Bucanero, Yupi,
+  Rexona, Gillette, Dove, Pantene, Nutribela, Fabuloso, huevo, Bimbo, pilas...).
+  Falsos positivos ya rechazados: Todito≠DeTodito, Gala≠tajada, Panela≠Panelada,
+  Aloha≠vaso, Choco Listo≠paleta, Todito/Chao/Jet multimarca→1 SKU.
+- [ ] Crear SKUs faltantes con precios reales y desgloses por tanda para lote 3+.
 - [ ] Poblar/validar `Product.imageUrl` para todo el catálogo.
-- [ ] Tabla mapeo `clase → productId` (SKU) para zonas AUTO; crear en BD las familias sin producto (ver resumen de `aplicar_conteo.js --dry-run`).
 - [ ] Tests del matching + auditoría `StockCount` en reportes.
+- [ ] Push commits locales (`ee9ed9c`, lote2) a `origin/main` cuando se indique.
+
+## 7. Lecciones de la sesión (no repetir errores)
+- YOLO-World es fiable solo en botellas/neveras (zona 33: IA 49 ≈ real); en apilados
+  densos, vidrio con reflejo (duplica ~10%) y minis (cajetillas, sobres) subcuenta
+  brutal: siempre validar con conteo humano por filas×columnas.
+- `zone-session` y el seed NUNCA pisan `Product.stock` sin mapeo SKU confirmado.
+- Ventas de prueba en BD: no bloquearon el seed, pero verificar siempre `sales`
+  antes de reemplazos masivos (respaldo primero).
+- Secretos: `MONGODB_URI` solo vía `.env`/env del backend o Render Shell; si se
+  expone en un chat, rotar password en Atlas (Database Access) de inmediato.
+- `git` en este PC: `listore/` es repo sin commits (no tocar); el backend real es
+  `listore/libkn` (remoto `github.com/CrisAguirre/libkn`, rama `main`).
