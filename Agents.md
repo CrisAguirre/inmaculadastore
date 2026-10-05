@@ -96,7 +96,10 @@ clasificación CLIP/embedding contra catálogo; conteo por similitud.
 - Backend: `cd libkn && npm run dev` (levanta Flask automáticamente).
 - Conteo auto 1 foto: `POST /api/scanner/scan-auto`. Sesión zona: `POST /api/scanner/zone-session`.
 - Batch 53 fotos: `python scanner/batch_all.py` (usa `src/stock/`); reporte en `scanner/reporte_conteo.md`.
-- Aplicar conteo como stock real: `node src/utils/aplicar_conteo.js --dry-run` y luego `--apply` (requiere `MONGODB_URI`).
+- Seed cantidades reales: `node src/utils/seedCantidades.js` (dry-run) y con `--apply`
+  reemplaza stock + audita (usa el `.env` del backend con `MONGODB_URI`; empareja por
+  MAPEO > exacto > barcode > difuso; zonas AUTO 25/33/34/36 y fusión 27-28 van por
+  `REPARTO_ZONAS_AUTO`).
 - Entrenamiento clásico (solo si se retoma): `cd scanner && python train.py 50`
   → copiar `weights/train/weights/best.pt` a `weights/best.pt`.
 - Vars Python: `SCANNER_CONF_THRESHOLD`, `SCANNER_ALLOW_COCO_FALLBACK`,
@@ -104,8 +107,9 @@ clasificación CLIP/embedding contra catálogo; conteo por similitud.
 
 ## 6. Pendientes
 - [x] Fotos recibidas: 53 en `libkn/src/stock/` (40 zonas; pares `1/1b`, `40/40a/40b` son planos complementarios y SE SUMAN). Batch 2026-10-05: auto=1108 uds, COCO=639. Ver `libkn/scanner/reporte_conteo.md` + `batch_result.json`.
-- [x] CONTEO TOTAL REAL 2026-10-05: `libkn/scanner/conteo_total_final.json` + `.csv` — 40 zonas, 156 líneas, **2.373 uds**. Criterio: la foto manda (sistema anterior era supuesto). Zonas ALTA/MEDIA por IA, 17 zonas BAJA por conteo humano visual. `src/utils/aplicar_conteo.js --apply` reemplaza stock + audita (requiere MONGODB_URI; zonas AUTO esperan mapeo SKU).
-- [x] Zonas ALTA contadas por IA (25, 34, 4, 40, 14, etc.) + 17 zonas BAJA por conteo humano visual — ver `conteo_total_final.json`. Falta: aplicar a BD (`aplicar_conteo.js --apply`, requiere `MONGODB_URI`) y verificación en sitio de traslapes 27/28 y 38/39.
+- [x] CONTEO TOTAL CORREGIDO v2 2026-10-05: `libkn/scanner/conteo_total_final.json` + `.csv` — 40 zonas, 312 líneas, **3.441 uds** (las 53 fotos vistas 1×1; la IA subcontaba ~1/3 en abarrotes/dulces/papel). Criterio: la foto manda. Fusión 27-28 (misma vitrina, 128, no sumar); 38/39 se suman. Seed listo: `src/utils/seedCantidades.js` (corre en backend, sin compartir URI).
+- [x] Zonas ALTA por IA + 36 zonas resto por conteo humano visual con familias. Zonas AUTO 25/33/34/36 y fusión 27-28 pendientes de MAPEO a SKU en el seed.
+- [ ] Correr seed en backend: `--dry-run`, completar MAPEO/`REPARTO_ZONAS_AUTO`, crear familias sin producto, `--apply`. Verificación en sitio: traslapes 27/28, 38/39, 11/12b y pilones (26/27/28 son estimación conservadora).
 - [ ] Poblar/validar `Product.imageUrl` para todo el catálogo.
 - [ ] Tabla mapeo `clase → productId` (SKU) para zonas AUTO; crear en BD las familias sin producto (ver resumen de `aplicar_conteo.js --dry-run`).
 - [ ] Tests del matching + auditoría `StockCount` en reportes.
